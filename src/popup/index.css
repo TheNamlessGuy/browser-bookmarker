@@ -1,0 +1,14 @@
+.hidden {
+  display: none !important;
+}
+
+#loading {
+  padding: 5px;
+  margin: 5px;
+}
+
+#loaded, #loaded * {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
