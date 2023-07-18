@@ -53,7 +53,7 @@ const Opts = {
     }
 
     if (changed) {
-      Opts.set(opts);
+      await Opts.set(opts);
     }
   },
 
