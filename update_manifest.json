@@ -1,0 +1,16 @@
+{
+  "addons": {
+    "bookmarker@TheNamlessGuy.github.io": {
+      "updates": [{
+        "version": "0.1.3",
+        "update_link": "https://github.com/TheNamlessGuy/bookmarker/releases/download/v0.1.3/bookmarker-0.1.3.xpi"
+      }, {
+        "version": "0.1.2",
+        "update_link": "https://github.com/TheNamlessGuy/bookmarker/releases/download/v0.1.2/bookmarker-0.1.2.xpi"
+      }, {
+        "version": "0.1.1",
+        "update_link": "https://github.com/TheNamlessGuy/bookmarker/releases/download/v0.1.1/bookmarker-0.1.1.xpi"
+      }]
+    }
+  }
+}

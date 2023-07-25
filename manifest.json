@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Bookmarker",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Bookmark tabs easier",
   "author": "TheNamlessGuy",
   "homepage_url": "https://github.com/TheNamlessGuy/bookmarker",
@@ -58,7 +58,8 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "bookmarker@TheNamlessGuy.github.io"
+      "id": "bookmarker@TheNamlessGuy.github.io",
+      "update_link": "https://raw.githubusercontent.com/TheNamlessGuy/bookmarker/main/update_manifest.json"
     }
   }
 }
