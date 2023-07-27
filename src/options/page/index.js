@@ -272,6 +272,10 @@ const Entry = {
       paths: [],
     };
 
+    if (opts.parameters.length === 1 && opts.parameters[0] === '') {
+      opts.parameters = [];
+    }
+
     for (const path of Entry.elements.paths(entry)) {
       opts.paths.push(EntryPath.save(path));
     }
