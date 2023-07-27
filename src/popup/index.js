@@ -112,7 +112,7 @@ const Mode = {
 window.addEventListener('DOMContentLoaded', async () => {
   BackgroundPage.init();
 
-  const data = JSON.parse((new URL(window.location.href)).searchParams.get('data'));
+  const data = JSON.parse(decodeURIComponent((new URL(window.location.href)).search.substring(6))); // 6 = '?data='.length
   const entry = await BackgroundPage.getEntryMatching(data.tab.url);
   if (entry == null) {
     window.close();

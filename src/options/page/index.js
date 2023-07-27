@@ -103,6 +103,13 @@ const Area = {
     } else {
       root.value = General.elements.prefix.root.value === '' ? '' : 'prefix';
     }
+
+    if (data?.prefix?.path != null) {
+      for (const segment of data.prefix.path) {
+        EntryPathSegment.create(segments, segment);
+      }
+    }
+
     root.addEventListener('change', () => {
       if (root.value === '' || (root.value === 'prefix' && General.elements.prefix.root.value === '')) { EntryPath.clear(segments); }
       Area._disablePathButtons(area);
@@ -508,8 +515,10 @@ const General = {
 
   save: function() {
     return {
-      prefix: General.elements.prefix.root.value,
-      path: EntryPath.saveSegments(General.elements.prefix.segments),
+      prefix: {
+        root: General.elements.prefix.root.value,
+        path: EntryPath.saveSegments(General.elements.prefix.segments),
+      },
     };
   },
 
