@@ -22,6 +22,7 @@ const Communication = {
 
     'tabs--move-to': async function(msg) { await Tabs.moveTo(msg.tabID, msg.url); },
 
+    'bookmarks--remove': async function(msg) { await Bookmarks.remove(msg.bookmarkID); },
     'bookmarks--add': async function(msg) { await Bookmarks.add(msg.url, msg.title, msg.entry, msg.path); },
     'bookmarks--move': async function(msg) { await Bookmarks.move(msg.bookmarkID, msg.path); },
     'bookmarks--get-entry-matching': async function(msg) { return {result: await Bookmarks.getEntryMatching(msg.url)}; },

@@ -38,6 +38,10 @@ const BackgroundPage = {
   moveTo: async function(tabID, url) {
     await BackgroundPage.send('tabs--move-to', {tabID, url});
   },
+
+  remove: async function(bookmarkID) {
+    await BackgroundPage.send('bookmarks--remove', {bookmarkID});
+  },
 };
 
 const Mode = {
@@ -101,6 +105,12 @@ const Mode = {
       window.close();
     });
 
+    const removeBtn = document.getElementById('remove-btn');
+    removeBtn.addEventListener('click', () => {
+      BackgroundPage.remove(bookmark.id);
+      window.close();
+    });
+
     const paths = document.getElementById('paths');
     paths.value = path.title;
     paths.addEventListener('change', () => {console.log('paths changed', paths.value, path.title, moveBtn.disabled); moveBtn.disabled = paths.value === path.title; });
@@ -120,16 +130,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   const {bookmark, path} = await BackgroundPage.getBookmarkAndPathMatching(data.tab.url, entry);
-
   if (bookmark == null) {
     Mode.add(data, entry);
   } else {
     Mode.show(data, entry, bookmark, path);
   }
-
-  // const defaultPath = entry.paths.find(x => x.default);
-
-  // if (defaultPath != null && !data.shift) {
-  //   BackgroundPage.addBookmark(defaultPath, data.tab.url);
-  // }
 });

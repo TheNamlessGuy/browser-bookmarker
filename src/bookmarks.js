@@ -49,7 +49,6 @@ const Bookmarks = {
         const processed = {
           regex: new RegExp(entry.regex),
           area: area.name ?? '',
-          folder: null,
           parameters: [],
           paths: [],
         };
@@ -232,6 +231,10 @@ const Bookmarks = {
   move: async function(bookmarkID, path) {
     const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path, true);
     await browser.bookmarks.move(bookmarkID, {parentId: folder.id});
+  },
+
+  remove: async function(bookmarkID) {
+    await browser.bookmarks.remove(bookmarkID);
   },
 
   _onCreated: async function(id, bookmark) {

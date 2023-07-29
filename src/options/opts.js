@@ -31,7 +31,7 @@ const Opts = {
   init: async function() {
     let {opts, changed} = await BookmarkOpts.init(Opts._default);
 
-    if (!('genral' in opts)) {
+    if (!('general' in opts)) {
       opts.general = JSON.parse(JSON.stringify(Opts._default.general));
       changed = true;
     }

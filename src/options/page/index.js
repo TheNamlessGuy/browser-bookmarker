@@ -502,6 +502,10 @@ const General = {
     });
     General._disabePrefixButtons();
 
+    for (const segment of opts.general.prefix.path) {
+      EntryPathSegment.create(General.elements.prefix.segments, segment);
+    }
+
     General.elements.prefix.add.addEventListener('click', () => {
       EntryPathSegment.create(General.elements.prefix.segments);
       General._disabePrefixButtons();
