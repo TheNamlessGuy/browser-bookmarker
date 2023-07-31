@@ -14,3 +14,4 @@ The download page is [here](https://addons.mozilla.org/en-US/firefox/addon/namle
 * Instead of "default", have "sequence". The first time you click the page action, go to sequence 1, then 2 on the second click, and so on. If there isn't a (current sequence + 1), open the modal
 * Case insensitive [x]
 * Follow redirects [x]
+* Include hash [x]
