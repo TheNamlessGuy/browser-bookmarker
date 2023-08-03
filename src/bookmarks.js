@@ -143,24 +143,47 @@ const Bookmarks = {
     return null;
   },
 
-  getOrCreateBookmarksFolderForPath: async function(path, create) {
-    let folder = JSON.parse(JSON.stringify(await browser.bookmarks.getTree()));
-    folder = folder[0].children.find(x => x.id === path.root);
+  _folderMatchesPath: async function(id, path, idx) {
+    const folder = (await browser.bookmarks.get(id))[0];
+    if (folder.title !== path.path[idx]) {
+      return false;
+    } else if (idx === 0) {
+      return folder.parentId === path.root;
+    }
+
+    return Bookmarks._folderMatchesPath(folder.parentId, path, idx - 1);
+  },
+
+  getBookmarksFolderForPath: async function(path) {
+    const idx = path.path.length - 1;
+    const contenders = await browser.bookmarks.search({title: path.path[idx]});
+    for (const contender of contenders) {
+      if (contender.type !== 'folder') { continue; }
+
+      const match = await Bookmarks._folderMatchesPath(contender.parentId, path, idx - 1);
+      if (match) {
+        return contender;
+      }
+    }
+
+    return null;
+  },
+
+  getOrCreateBookmarksFolderForPath: async function(path) {
+    let folder = (await browser.bookmarks.getSubTree(path.root))[0];
 
     for (const segment of path.path) {
       const match = folder.children.find(x => x.title === segment);
       if (match != null) {
         folder = match;
-      } else if (create) {
+      } else {
         folder = await browser.bookmarks.create({
           parentId: folder.id,
           title: segment,
           type: 'folder',
         });
 
-        if (!('children' in folder)) { folder.children = []; }
-      } else {
-        return null;
+        folder.children = [];
       }
     }
 
@@ -173,7 +196,7 @@ const Bookmarks = {
 
     for (let r = 0; r < results.length; ++r) {
       for (const path of entry.paths) {
-        const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path, false);
+        const folder = await Bookmarks.getBookmarksFolderForPath(path, false);
         if (folder != null && results[r].parentId === folder.id) {
           return {bookmark: results[r], path: path};
         }
@@ -207,18 +230,18 @@ const Bookmarks = {
     } else if (bookmark.url === url) {
       return {
         state: Icon.state.BOOKMARKED,
-        title: `Bookmarked as a(n) '${entry.area}' ${path.title}`,
+        title: `Bookmarked as a '${entry.area}' ${path.title}`,
       };
     }
 
     return {
       state: Icon.state.BOOKMARKED_WITH_OTHER_URL,
-      title: `Bookmarked as a(n) '${entry.area}' ${path.title} (but with another URL)`,
+      title: `Bookmarked as a '${entry.area}' ${path.title} (but with another URL)`,
     };
   },
 
   add: async function(url, title, entry, path) {
-    const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path, true);
+    const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path);
 
     await browser.bookmarks.create({
       parentId: folder.id,
@@ -229,7 +252,7 @@ const Bookmarks = {
   },
 
   move: async function(bookmarkID, path) {
-    const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path, true);
+    const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path);
     await browser.bookmarks.move(bookmarkID, {parentId: folder.id});
   },
 

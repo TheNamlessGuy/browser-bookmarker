@@ -14,7 +14,9 @@ const Tabs = {
   },
 
   _onUpdated: async function(tabID, changeInfo, tabInfo) {
-    await Tabs.setIconForTab(tabID, tabInfo.url);
+    if (changeInfo.status === 'complete') {
+      await Tabs.setIconForTab(tabID, tabInfo.url);
+    }
   },
 
   setIconForActiveTabs: async function() {

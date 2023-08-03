@@ -27,5 +27,6 @@ const Communication = {
     'bookmarks--move': async function(msg) { await Bookmarks.move(msg.bookmarkID, msg.path); },
     'bookmarks--get-entry-matching': async function(msg) { return {result: await Bookmarks.getEntryMatching(msg.url)}; },
     'bookmarks--get-bookmark-and-path-matching': async function(msg) { return {result: await Bookmarks.getBookmarkAndPathMatching(msg.url, msg.entry)}; },
+    'bookmarks--reprocess-entries': async function() { Bookmarks.processEntries(); await Tabs.setIconForActiveTabs(); }
   },
 };

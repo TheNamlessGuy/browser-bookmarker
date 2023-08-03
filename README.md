@@ -15,3 +15,4 @@ The download page is [here](https://addons.mozilla.org/en-US/firefox/addon/namle
 * Case insensitive [x]
 * Follow redirects [x]
 * Include hash [x]
+* "Keep folder sorted" [x]

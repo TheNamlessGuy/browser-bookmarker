@@ -34,6 +34,10 @@ const BackgroundPage = {
   save: async function(opts, extras = {}) {
     await BackgroundPage.send('save', {opts: opts, extras: extras});
   },
+
+  reprocessEntries: async function() {
+    await BackgroundPage.send('bookmarks--reprocess-entries');
+  },
 };
 
 const Template = {
@@ -563,6 +567,7 @@ async function save() {
   }
 
   await BackgroundPage.save(opts, extras);
+  await BackgroundPage.reprocessEntries();
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
