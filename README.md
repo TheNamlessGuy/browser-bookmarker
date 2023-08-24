@@ -12,7 +12,5 @@ The download page is [here](https://addons.mozilla.org/en-US/firefox/addon/namle
 ## Future plans
 * Format URL on creation (include capture groups from the OG url) - if you have website.com/cool/ saved, and you want website.com/cool/stuff to show up as a "other url" thing, or the reverse
 * Instead of "default", have "sequence". The first time you click the page action, go to sequence 1, then 2 on the second click, and so on. If there isn't a (current sequence + 1), open the modal
-* Case insensitive [x]
-* Follow redirects [x]
 * Include hash [x]
 * "Keep folder sorted" [x]

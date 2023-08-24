@@ -16,6 +16,11 @@ const Tabs = {
   _onUpdated: async function(tabID, changeInfo, tabInfo) {
     if (changeInfo.status === 'complete') {
       await Tabs.setIconForTab(tabID, tabInfo.url);
+    } else if (changeInfo.status === 'loading' && 'url' in changeInfo) {
+      const from = `${new URL(changeInfo.url).protocol}//${tabInfo.title}`;
+      if (from !== changeInfo.url) {
+        await Bookmarks.updateRedirectIfApplicable(from, changeInfo.url);
+      }
     }
   },
 

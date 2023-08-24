@@ -4,6 +4,9 @@ const Bookmarks = {
     *   regex: /blah.com\/.*\/user/,
     *   parameters: [{key: 'search', value?: string, optional: boolean}, ...],
     *   area: string,
+    *   opts: {
+    *     followRedirects: boolean,
+    *   },
     *   paths: [{
     *     root: 'toolbar_____',
     *     path: ['Sites', 'blah.com', 'Users'],
@@ -51,6 +54,7 @@ const Bookmarks = {
           area: area.name ?? '',
           parameters: [],
           paths: [],
+          opts: area.opts,
         };
 
         // Parameters
@@ -258,6 +262,16 @@ const Bookmarks = {
 
   remove: async function(bookmarkID) {
     await browser.bookmarks.remove(bookmarkID);
+  },
+
+  updateRedirectIfApplicable: async function(fromURL, toURL) {
+    const entry = await Bookmarks.getEntryMatching(fromURL);
+    if (entry == null || !entry.opts.followRedirects) { return; }
+
+    const {bookmark, path} = await Bookmarks.getBookmarkAndPathMatching(fromURL, entry);
+    if (bookmark == null) { return; }
+
+    await browser.bookmarks.update(bookmark.id, {url: toURL});
   },
 
   _onCreated: async function(id, bookmark) {

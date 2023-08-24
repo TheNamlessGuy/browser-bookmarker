@@ -129,6 +129,9 @@ const Area = {
       Area._disablePathButtons(area);
     });
 
+    const followRedirects = area.getElementsByClassName('area-opt--follow-redirect')[0];
+    followRedirects.checked = data?.opts.followRedirects ?? false;
+
     if (data?.entries == null) {
       Entry.create(area);
     } else {
@@ -172,6 +175,9 @@ const Area = {
         path: EntryPath.saveSegments(area.getElementsByClassName('area-path-segments')[0]),
       },
       entries: [],
+      opts: {
+        followRedirects: area.getElementsByClassName('area-opt--follow-redirect')[0].checked,
+      },
     };
 
     for (const entry of area.getElementsByClassName('entry')) {

@@ -7,6 +7,9 @@ const Opts = {
      *     root: ''|'prefix'|'toolbar_____'|'menu________',
      *     path: string[],
      *   },
+     *   opts: {
+     *     followRedirects: boolean,
+     *   },
      *   entries: {
      *     regex: string,
      *     parameters: string[],
@@ -31,16 +34,6 @@ const Opts = {
   init: async function() {
     let {opts, changed} = await BookmarkOpts.init(Opts._default);
 
-    if (!('general' in opts)) {
-      opts.general = JSON.parse(JSON.stringify(Opts._default.general));
-      changed = true;
-    }
-
-    if (!('areas' in opts)) {
-      opts.areas = JSON.parse(JSON.stringify(Opts._default.areas));
-      changed = true;
-    }
-
     if ('entries' in opts) { // Old data - convert
       opts.areas.push({
         name: null,
@@ -50,6 +43,23 @@ const Opts = {
 
       delete opts.entries;
       changed = true;
+    }
+
+    if (!('general' in opts)) {
+      opts.general = JSON.parse(JSON.stringify(Opts._default.general));
+      changed = true;
+    }
+
+    if (!('areas' in opts)) {
+      opts.areas = JSON.parse(JSON.stringify(Opts._default.areas));
+      changed = true;
+    } else {
+      for (let a = 0; a < opts.areas.length; ++a) {
+        if (!('opts' in opts.areas[a])) {
+          opts.areas[a].opts = {followRedirects: false};
+          changed = true;
+        }
+      }
     }
 
     if (changed) {
