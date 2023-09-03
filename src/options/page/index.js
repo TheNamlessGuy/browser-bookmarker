@@ -130,7 +130,7 @@ const Area = {
     });
 
     const followRedirects = area.getElementsByClassName('area-opt--follow-redirect')[0];
-    followRedirects.checked = data?.opts.followRedirects ?? false;
+    followRedirects.checked = data?.opts?.followRedirects ?? false;
 
     if (data?.entries == null) {
       Entry.create(area);
@@ -179,6 +179,10 @@ const Area = {
         followRedirects: area.getElementsByClassName('area-opt--follow-redirect')[0].checked,
       },
     };
+
+    if (opts.name === '') {
+      opts.name = null;
+    }
 
     for (const entry of area.getElementsByClassName('entry')) {
       opts.entries.push(Entry.save(entry));
@@ -238,8 +242,16 @@ const Entry = {
     }
 
     entry.getElementsByClassName('add-entry-path-btn')[0].addEventListener('click', () => EntryPath.create(paths));
-
     entry.getElementsByClassName('remove-entry-btn')[0].addEventListener('click', () => Entry.remove(entry));
+
+    const andThens = entry.getElementsByClassName('and-thens')[0];
+    if (data.andThen != null) {
+      for (const andThen of data.andThen) {
+        AndThen.create(andThens, andThen);
+      }
+    }
+
+    entry.getElementsByClassName('add-and-then-btn')[0].addEventListener('click', () => AndThen.create(andThens));
 
     area.getElementsByClassName('entries')[0].appendChild(entry);
     return entry;
@@ -260,6 +272,10 @@ const Entry = {
 
     paths: function(entry) {
       return entry.getElementsByClassName('entry-path');
+    },
+
+    andthens: function(entry) {
+      return entry.getElementsByClassName('and-then');
     },
 
     errors: function(entry) {
@@ -287,6 +303,7 @@ const Entry = {
       regex: Entry.elements.regex(entry).value,
       parameters: Entry.elements.parameters(entry).value.split(','),
       paths: [],
+      andThen: [],
     };
 
     if (opts.parameters.length === 1 && opts.parameters[0] === '') {
@@ -295,6 +312,10 @@ const Entry = {
 
     for (const path of Entry.elements.paths(entry)) {
       opts.paths.push(EntryPath.save(path));
+    }
+
+    for (const andthen of Entry.elements.andthens(entry)) {
+      opts.andThen.push(AndThen.save(andthen));
     }
 
     return opts;
@@ -480,6 +501,31 @@ const EntryPathSegment = {
   },
 };
 
+const AndThen = {
+  template: null,
+
+  init: function() {
+    AndThen.template = document.getElementById('template--and-then');
+  },
+
+  create: function(container, data = {}) {
+    const element = Template.init(AndThen.template);
+
+    element.getElementsByClassName('and-then-type')[0].value = data.type ?? 'set-url';
+    element.getElementsByClassName('and-then-value')[0].value = data.value ?? '';
+    element.getElementsByClassName('remove-and-then-btn')[0].addEventListener('click', () => element.remove());
+
+    container.appendChild(element);
+  },
+
+  save: function(element) {
+    return {
+      type: element.getElementsByClassName('and-then-type')[0].value,
+      value: element.getElementsByClassName('and-then-value')[0].value,
+    };
+  },
+};
+
 const General = {
   elements: {
     area: null,
@@ -583,6 +629,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   Entry.init();
   EntryPath.init();
   EntryPathSegment.init();
+  AndThen.init();
   General.init();
 
   const opts = await BackgroundPage.getOpts();

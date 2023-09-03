@@ -19,6 +19,10 @@ const Opts = {
      *       path: string[],
      *       default: boolean,
      *     }[],
+     *     andThen: {
+     *       type: 'set-url',
+     *       value: string,
+     *     }[],
      *   }[],
      * }[]
      */
@@ -58,6 +62,13 @@ const Opts = {
         if (!('opts' in opts.areas[a])) {
           opts.areas[a].opts = {followRedirects: false};
           changed = true;
+        }
+
+        for (let e = 0; e < opts.areas[a].entries.length; ++e) {
+          if (!('andThen' in opts.areas[a].entries[e])) {
+            opts.areas[a].entries[e].andThen = [];
+            changed = true;
+          }
         }
       }
     }

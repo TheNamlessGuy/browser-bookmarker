@@ -2,6 +2,7 @@ const Bookmarks = {
   /*
     * [{
     *   regex: /blah.com\/.*\/user/,
+    *   regexStr: string,
     *   parameters: [{key: 'search', value?: string, optional: boolean}, ...],
     *   area: string,
     *   opts: {
@@ -13,6 +14,7 @@ const Bookmarks = {
     *     title: 'Users',
     *     default: boolean,
     *   }, ...],
+    *   andThen: {type: 'set-url', value: string}[],
     * }]
     */
   _entries: [],
@@ -51,10 +53,12 @@ const Bookmarks = {
       for (const entry of area.entries) {
         const processed = {
           regex: new RegExp(entry.regex),
+          regexStr: entry.regex,
           area: area.name ?? '',
           parameters: [],
           paths: [],
           opts: area.opts,
+          andThen: JSON.parse(JSON.stringify(entry.andThen)),
         };
 
         // Parameters
@@ -164,7 +168,7 @@ const Bookmarks = {
     for (const contender of contenders) {
       if (contender.type !== 'folder') { continue; }
 
-      const match = await Bookmarks._folderMatchesPath(contender.parentId, path, idx - 1);
+      const match = idx === 0 ? await Bookmarks._folderMatchesPath(contender.id, path, idx) : await Bookmarks._folderMatchesPath(contender.parentId, path, idx - 1);
       if (match) {
         return contender;
       }
@@ -195,8 +199,12 @@ const Bookmarks = {
   },
 
   getBookmarkAndPathMatching: async function(url, entry) {
-    const formatted = Bookmarks._urlToString(Bookmarks.format(url, entry), true);
-    const results = await browser.bookmarks.search({url: formatted});
+    url = Bookmarks.format(url, entry);
+    for (let a of entry.andThen) {
+      url = AndThen[a.type]({andthen: a, url: url, entry: entry});
+    }
+    url = Bookmarks._urlToString(url, true);
+    const results = await browser.bookmarks.search({url: url});
 
     for (let r = 0; r < results.length; ++r) {
       for (const path of entry.paths) {
@@ -247,10 +255,16 @@ const Bookmarks = {
   add: async function(url, title, entry, path) {
     const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path);
 
+    url = Bookmarks.format(url, entry);
+    for (let a of entry.andThen) {
+      url = AndThen[a.type]({andthen: a, url: url, entry: entry});
+    }
+    url = Bookmarks._urlToString(url, true);
+
     await browser.bookmarks.create({
       parentId: folder.id,
       title: title,
-      url: Bookmarks._urlToString(Bookmarks.format(url, entry), true),
+      url: url,
       type: 'bookmark',
     });
   },
