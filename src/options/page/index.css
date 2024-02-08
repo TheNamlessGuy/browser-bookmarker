@@ -1,29 +1,12 @@
-.hidden {
-  display: none;
-}
-
-.separate {
-  display: flex;
-  justify-content: space-between;
-}
-
 hr {
   width: 98%;
 }
 
 button {
   text-align: center;
+  margin: 5px;
 }
 
-.entry-path-segment > input {
-  width: 8ch;
-  font-family: monospace;
-}
-
-.errors .error {
-  background-color: red;
-  color: white;
-  padding: 5px;
-  margin: 5px 0;
-  border-radius: 5px;
+#add-new-area-btn {
+  margin-top: 5px;
 }

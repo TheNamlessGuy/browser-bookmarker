@@ -4,126 +4,25 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">
     <link rel="stylesheet" type="text/css" href="index.css">
+    <script src="custom-elements/error.js"></script>
+    <script src="custom-elements/path.js"></script>
+    <script src="custom-elements/entry-path.js"></script>
+    <script src="custom-elements/entry-and-then.js"></script>
+    <script src="custom-elements/entry.js"></script>
+    <script src="custom-elements/area.js"></script>
+    <script src="custom-elements/general.js"></script>
     <script src="index.js"></script>
   </head>
   <body>
-    <template id="template--error">
-      <div class="error"></div>
-    </template>
-
-    <template id="template--area">
-      <fieldset class="area">
-        <legend class="area-title"></legend>
-        <div class="content">
-          <div class="separate">
-            <input class="area-name" type="text" placeholder="Area name">
-            <button class="remove-btn">Remove area</button>
-          </div>
-          <div>
-            <select class="area-path-root">
-              <option value="">No prefix</option>
-              <option value="prefix">Use general prefix</option>
-              <option value="toolbar_____">Toolbar</option>
-              <option value="menu________">Menu</option>
-            </select>
-            <span class="area-path-segments"></span>
-            <button class="remove-area-path-segment" disabled>-</button>
-            <button class="add-area-path-segment" disabled>+</button>
-          </div>
-          <div>
-            <label>Follow redirects <span title="Note: Due to browser limitations, only works if the bookmark is opened in a new tab">⚠</span></label> <input class="area-opt--follow-redirect" type="checkbox"><br>
-          </div>
-          <hr>
-          <div class="entries"></div>
-          <button class="add-entry-btn">Add entry</button>
-        </div>
-        <div class="content-hidden hidden">Content is hidden</div>
-      </fieldset>
-    </template>
-
-    <template id="template--entry-path-segment">
-      <span class="entry-path-segment">
-        <span>/</span>
-        <input type="text" placeholder="Segment">
-      </span>
-    </template>
-
-    <template id="template--entry-path">
-      <div class="entry-path">
-        <button class="remove-path-btn">🗑</button>
-        <input class="entry-path-title" type="text" placeholder="Title">
-        <span class="checkbox-container">
-          <span>Default</span>
-          <input class="entry-path-default" type="checkbox">
-        </span>
-        <select class="entry-path-root">
-          <option value="prefix">Use area prefix</option>
-          <option value="toolbar_____">Toolbar</option>
-          <option value="menu________">Menu</option>
-        </select>
-        <span class="entry-path-segments"></span>
-        <button class="remove-entry-path-segment" disabled>-</button>
-        <button class="add-entry-path-segment">+</button>
-      </div>
-    </template>
-
-    <template id="template--entry">
-      <div class="entry">
-        <div class="errors hidden"></div>
-        <div class="separate">
-          <span>
-            <input class="entry-regex" type="text" placeholder="RegExp">
-            <input class="entry-parameters" type="text" placeholder="Parameters (CSV)">
-            <button class="entry-up-btn">↑</button>
-            <button class="entry-down-btn">↓</button>
-          </span>
-          <span>
-            <button class="remove-entry-btn">Remove entry</button>
-          </span>
-        </div>
-        <div class="entry-paths"></div>
-        <button class="add-entry-path-btn">Add path</button>
-        <div class="and-thens"></div>
-        <button class="add-and-then-btn">Add "And then"</button>
-        <hr>
-      </div>
-    </template>
-
-    <template id="template--and-then">
-      <div class="and-then">
-        <button class="remove-and-then-btn">🗑</button>
-        And then
-        <select class="and-then-type">
-          <option value="set-url">set the URL to</option>
-        </select>
-        <input type="text" class="and-then-value">
-      </div>
-    </template>
-
-    <fieldset id="general" class="area">
-      <legend class="area-title">General settings</legend>
-      <div class="content">
-        <label>Save using bookmark</label> <input id="general--save-using-bookmark" type="checkbox"><br>
-        <span>
-          <label>Prefix</label>
-          <select id="general--prefix-root">
-            <option value="">Do not use</option>
-            <option value="toolbar_____">Toolbar</option>
-            <option value="menu________">Menu</option>
-          </select>
-          <span id="general--prefix-segments" class="entry-path-segment-container"></span>
-          <button id="general--prefix-remove-segment" class="remove-entry-path-segment" disabled>-</button>
-          <button id="general--prefix-add-segment" class="add-entry-path-segment" disabled>+</button>
-        </span>
-      </div>
-    </fieldset>
-
+    <c-general></c-general>
+    <button id="toggle-area-collapse">Toggle collapse for all areas</button>
     <hr>
+
     <div id="area-container"></div>
-    <button id="add-new-area-btn">Add new area</button>
     <hr>
 
     <div id="errors" class="hidden"></div>
+    <button id="add-new-area-btn">Add new area</button>
     <button id="save-btn">Save</button>
   </body>
 </html>
