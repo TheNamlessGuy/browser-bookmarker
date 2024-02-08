@@ -44,10 +44,11 @@ class EntryAndThenElement extends HTMLElement {
     this.attachShadow({mode: 'closed'}).append(style, container);
   }
 
-  init(entry, data) {
+  init(entry, data = null) {
     this._entry = entry;
 
-    console.log('EntryAndThen::init', entry, data);
+    this._select.value = data?.type ?? EntryAndThenElement._types[0].value;
+    this._value.value = data?.value ?? '';
   }
 
   clearErrors() {
