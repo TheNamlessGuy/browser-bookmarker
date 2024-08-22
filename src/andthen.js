@@ -1,17 +1,64 @@
+/** AndThenData
+ * @typedef {object} AndThenData
+ * @property {BrowserURL} url
+ * @property {string} title
+ * @property {Entry} entry
+ * @property {number} tabID
+ */
+
+/** AndThenType
+ * @typedef {object} AndThenType
+ * @property {boolean} automatic
+ * @property {(andThen: EntryAndThen, data: AndThenData) => Promise<AndThenReturnType>} callback
+ */
+
+/** AndThenReturnType
+ * @typedef {object} AndThenReturnType
+ * @property {string} [url]
+ * @property {string} [title]
+ */
+
 const AndThen = {
-  'set-url': function(data) {
-    const andthen = data.andthen;
-    const url = data.url;
-    const entry = data.entry;
+  /**
+   * @param {AndThenData} data
+   * @param {boolean} onlyAutomatic
+   * @returns {{url: BrowserURL, title: string}}
+   */
+  do: async function(data, onlyAutomatic = false) {
+    const retval = {
+      url: data.url,
+      title: data.title,
+    };
 
-    const regex = new RegExp(entry.regexStr);
-    const matches = url.toString().match(regex);
+    for (const andThen of data.entry.andThen) {
+      if (onlyAutomatic && !AndThen._types[andThen.type].automatic) { continue; }
 
-    let retval = `${url.protocol}//${andthen.value}`;
-    for (let i = 1; i < matches.length; ++i) {
-      retval = retval.replaceAll(`{{${i}}}`, matches[i]);
+      const response = await AndThen._types[andThen.type].callback(andThen, data);
+
+      if ('url' in response) { retval.url = response.url; }
+      if ('title' in response) { retval.title = response.title; }
     }
 
-    return new URL(retval);
-  }
+    return retval;
+  },
+
+  /**
+   * @type {Object.<string, AndThenType>}
+   */
+  _types: {
+    'set-url': {
+      automatic: true,
+      callback: async function(andThen, data) {
+        const regex = new RegExp(data.entry.regexStr);
+        const matches = data.url.toString().match(regex);
+
+        let retval = `${data.url.protocol}//${andThen.value}`;
+        for (let i = 1; i < matches.length; ++i) {
+          retval = retval.replaceAll(`{{${i}}}`, matches[i]);
+        }
+
+        return {url: new URL(retval)};
+      },
+    },
+  },
 }

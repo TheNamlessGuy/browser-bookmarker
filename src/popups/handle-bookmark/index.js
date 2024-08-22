@@ -19,16 +19,32 @@ const BackgroundPage = {
     });
   },
 
+  /**
+   * @param {string} url
+   * @returns {Promise<Entry>}
+   */
   getEntryMatching: async function(url) {
     return (await BackgroundPage.send('bookmarks--get-entry-matching', {url})).result;
   },
 
+  /**
+   * @param {string} url
+   * @param {Entry} entry
+   * @returns {Promise<result: {bookmark: BrowserBookmark|null, path: EntryPath|null}>}
+   */
   getBookmarkAndPathMatching: async function(url, entry) {
     return (await BackgroundPage.send('bookmarks--get-bookmark-and-path-matching', {url, entry})).result;
   },
 
+  /**
+   * @param {string} url
+   * @param {string} title
+   * @param {Entry} entry
+   * @param {string[]} path
+   * @returns {Promise<void>}
+   */
   add: async function(url, title, entry, path) {
-    await BackgroundPage.send('bookmarks--add', {url, title, entry, path});
+    await BackgroundPage.send('bookmarks--add', {url, title, entry, path, tabID: QueryParameters.tabID()});
   },
 
   move: async function(bookmarkID, path) {
@@ -113,16 +129,28 @@ const Mode = {
 
     const paths = document.getElementById('paths');
     paths.value = path.title;
-    paths.addEventListener('change', () => {console.log('paths changed', paths.value, path.title, moveBtn.disabled); moveBtn.disabled = paths.value === path.title; });
+    paths.addEventListener('change', () => moveBtn.disabled = paths.value === path.title);
 
     Mode._loaded();
+  },
+};
+
+const QueryParameters = {
+  data: function() {
+    const url = new URL(window.location.href);
+    return JSON.parse(url.searchParams.get('data'));
+  },
+
+  tabID: function() {
+    const url = new URL(window.location.href);
+    return parseInt(url.searchParams.get('tabID'), 10);
   },
 };
 
 window.addEventListener('DOMContentLoaded', async () => {
   BackgroundPage.init();
 
-  const data = JSON.parse(decodeURIComponent(window.location.href.substring(window.location.href.indexOf('?data=') + 6))); // 6 = '?data='.length
+  const data = QueryParameters.data();
   const entry = await BackgroundPage.getEntryMatching(data.tab.url);
   if (entry == null) {
     window.close();

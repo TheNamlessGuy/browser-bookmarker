@@ -83,7 +83,7 @@ const BookmarkOpts = {
       }
     }
 
-    await browser.bookmarks.update(bookmark.id, {
+    const response = await browser.bookmarks.update(bookmark.id, {
       url: BookmarkOpts._url(opts),
     });
   },
@@ -117,12 +117,12 @@ const BookmarkOpts = {
   },
 
   set: async function(opts, extras = {}) {
-    const saveUsingBookmarkOverride = extras.saveUsingBookmarkOverride ?? false;
-
-    if (saveUsingBookmarkOverride || BookmarkOpts._saveUsingBookmark) {
+    if (extras.saveUsingBookmarkOverride ?? BookmarkOpts._saveUsingBookmark) {
+      BookmarkOpts._saveUsingBookmark = true;
       await BookmarkOpts._setBookmarkData(opts);
       await browser.storage.local.clear(); // This has to be an empty object if we want to load the bookmark data on plugin init
     } else {
+      BookmarkOpts._saveUsingBookmark = false;
       await browser.storage.local.clear();
       await browser.storage.local.set(opts);
     }

@@ -1,6 +1,6 @@
 class EntryAndThenElement extends HTMLElement {
   static _types = [
-    {value: 'set-url', display: 'set the URL to'},
+    {value: 'set-url',          display: 'set the URL to',   _value: true},
   ];
 
   _entry = null;
@@ -35,6 +35,7 @@ class EntryAndThenElement extends HTMLElement {
       option.innerText = type.display;
       this._select.appendChild(option);
     }
+    this._select.addEventListener('change', this._setValueVisibility.bind(this));
     container.appendChild(this._select);
 
     this._value = document.createElement('input');
@@ -49,6 +50,7 @@ class EntryAndThenElement extends HTMLElement {
 
     this._select.value = data?.type ?? EntryAndThenElement._types[0].value;
     this._value.value = data?.value ?? '';
+    this._setValueVisibility();
   }
 
   clearErrors() {
@@ -66,7 +68,7 @@ class EntryAndThenElement extends HTMLElement {
 
     let isValid = true;
 
-    if (this._value.value.trim() === '') {
+    if (this._getSelectedEntry()._value && this._value.value.trim() === '') {
       this.addError('Value cannot be empty');
       isValid = false;
     }
@@ -79,6 +81,14 @@ class EntryAndThenElement extends HTMLElement {
       type: this._select.value,
       value: this._value.value.trim(),
     }
+  }
+
+  _getSelectedEntry() {
+    return EntryAndThenElement._types.find(x => x.value === this._select.value) ?? null;
+  }
+
+  _setValueVisibility() {
+    this._value.style.display = this._getSelectedEntry()._value ? null : 'none';
   }
 }
 

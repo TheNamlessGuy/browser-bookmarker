@@ -1,25 +1,24 @@
+/** ProcessedEntry
+ * @typedef {object} ProcessedEntry
+ * @property {RegExp} regex,
+ * @property {string} regexStr,
+ * @property {{key: string, value?: string, optional: boolean}[]} parameters
+ * @property {string} area
+ * @property {AreaOptions} opts
+ * @property {EntryPath[]} paths
+ * @property {EntryAndThen[]} andThen
+ */
+
 const Bookmarks = {
-  /*
-    * [{
-    *   regex: /blah.com\/.*\/user/,
-    *   regexStr: string,
-    *   parameters: [{key: 'search', value?: string, optional: boolean}, ...],
-    *   area: string,
-    *   opts: {
-    *     followRedirects: boolean,
-    *   },
-    *   paths: [{
-    *     root: 'toolbar_____',
-    *     path: ['Sites', 'blah.com', 'Users'],
-    *     title: 'Users',
-    *     default: boolean,
-    *   }, ...],
-    *   andThen: {type: 'set-url', value: string}[],
-    * }]
+   /**
+    * @type {ProcessedEntry[]}
     */
   _entries: [],
   _processingEntries: true,
 
+  /**
+   * @returns {Promise<void>}
+   */
   init: async function() {
     await Bookmarks.processEntries();
 
@@ -36,6 +35,9 @@ const Bookmarks = {
     }
   },
 
+  /**
+   * @returns {Promise<void>}
+   */
   processEntries: async function() {
     Bookmarks._processingEntries = true;
     Bookmarks._entries = [];
@@ -109,12 +111,22 @@ const Bookmarks = {
     Tabs.setIconForActiveTabs();
   },
 
+  /**
+   * @param {BrowserURL} url TODO
+   * @param {boolean} includeQueryParams
+   * @returns {string}
+   */
   _urlToString: function(url, includeQueryParams) {
     url = includeQueryParams ? url.toString() : url.origin + url.pathname;
     url = decodeURIComponent(url);
     return url;
   },
 
+  /**
+   * @param {string} url
+   * @param {Entry} entry
+   * @returns {BrowserURL}
+   */
   format: function(url, entry) {
     url = new URL(url);
     let retval = new URL(Bookmarks._urlToString(url, false));
@@ -137,6 +149,10 @@ const Bookmarks = {
     return retval;
   },
 
+  /**
+   * @param {string} url
+   * @returns {Entry|null}
+   */
   getEntryMatching: function(url) {
     for (const entry of Bookmarks._entries) {
       const formatted = Bookmarks.format(url, entry);
@@ -151,6 +167,12 @@ const Bookmarks = {
     return null;
   },
 
+  /**
+   * @param {string} id
+   * @param {EntryPath} path TODO
+   * @param {number} idx
+   * @returns {Promise<boolean>}
+   */
   _folderMatchesPath: async function(id, path, idx) {
     const folder = (await browser.bookmarks.get(id))[0];
     if (folder.title !== path.path[idx]) {
@@ -162,6 +184,10 @@ const Bookmarks = {
     return Bookmarks._folderMatchesPath(folder.parentId, path, idx - 1);
   },
 
+  /**
+   * @param {EntryPath} path
+   * @returns {BrowserBookmark|null}
+   */
   getBookmarksFolderForPath: async function(path) {
     const idx = path.path.length - 1;
     const contenders = await browser.bookmarks.search({title: path.path[idx]});
@@ -177,6 +203,10 @@ const Bookmarks = {
     return null;
   },
 
+  /**
+   * @param {string[]} path
+   * @returns {BrowserBookmark}
+   */
   getOrCreateBookmarksFolderForPath: async function(path) {
     let folder = (await browser.bookmarks.getSubTree(path.root))[0];
 
@@ -198,12 +228,20 @@ const Bookmarks = {
     return folder;
   },
 
+  /**
+   * @param {string} url
+   * @param {Entry} entry
+   * @returns {{bookmark: BrowserBookmark|null, path: EntryPath|null}}
+   */
   getBookmarkAndPathMatching: async function(url, entry) {
     url = Bookmarks.format(url, entry);
-    for (let a of entry.andThen) {
-      url = AndThen[a.type]({andthen: a, url: url, entry: entry});
-    }
-    url = Bookmarks._urlToString(url, true);
+    const response = await AndThen.do({
+      url: url,
+      title: null,
+      entry: entry,
+      tabID: null, // The automatic AndThen shouldn't need this
+    }, true);
+    url = Bookmarks._urlToString(response.url, true);
     const results = await browser.bookmarks.search({url: url});
 
     for (let r = 0; r < results.length; ++r) {
@@ -218,6 +256,10 @@ const Bookmarks = {
     return {bookmark: null, path: null};
   },
 
+  /**
+   * @param {string} url
+   * @returns {state: string, title: string}
+   */
   getStateAndTitleFor: async function(url) {
     // What entry would this URL fall under?
     const entry = await Bookmarks.getEntryMatching(url);
@@ -252,32 +294,57 @@ const Bookmarks = {
     };
   },
 
-  add: async function(url, title, entry, path) {
+  /**
+   * @param {string} url
+   * @param {string} title
+   * @param {Entry} entry
+   * @param {string[]} path
+   * @param {number} tabID
+   * @returns {Promise<void>}
+   */
+  add: async function(url, title, entry, path, tabID) {
     const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path);
 
     url = Bookmarks.format(url, entry);
-    for (let a of entry.andThen) {
-      url = AndThen[a.type]({andthen: a, url: url, entry: entry});
-    }
-    url = Bookmarks._urlToString(url, true);
+    const response = await AndThen.do({
+      url: url,
+      title: title,
+      entry: entry,
+      tabID: tabID,
+    });
+    url = Bookmarks._urlToString(response.url, true);
 
     await browser.bookmarks.create({
       parentId: folder.id,
-      title: title,
+      title: response.title,
       url: url,
       type: 'bookmark',
     });
   },
 
+  /**
+   * @param {string} bookmarkID
+   * @param {string[]} path
+   * @returns {Promise<void>}
+   */
   move: async function(bookmarkID, path) {
     const folder = await Bookmarks.getOrCreateBookmarksFolderForPath(path);
     await browser.bookmarks.move(bookmarkID, {parentId: folder.id});
   },
 
+  /**
+   * @param {string} bookmarkID
+   * @returns {Promise<void>}
+   */
   remove: async function(bookmarkID) {
     await browser.bookmarks.remove(bookmarkID);
   },
 
+  /**
+   * @param {string} fromURL
+   * @param {string} toURL
+   * @returns {Promise<void>}
+   */
   updateRedirectIfApplicable: async function(fromURL, toURL) {
     const entry = await Bookmarks.getEntryMatching(fromURL);
     if (entry == null || !entry.opts.followRedirects) { return; }
@@ -288,16 +355,31 @@ const Bookmarks = {
     await browser.bookmarks.update(bookmark.id, {url: toURL});
   },
 
+  /**
+   * @param {string} id
+   * @param {BrowserBookmark} bookmark
+   * @returns {Promise<void>}
+   */
   _onCreated: async function(id, bookmark) {
     if (bookmark.type === 'bookmark') {
       await Tabs.setIconForActiveTabs();
     }
   },
 
+  /**
+   * @param {string} id
+   * @param {BrowserBookmarkMoveInfo} moveInfo TODO
+   * @returns {Promise<void>}
+   */
   _onMoved: async function(id, moveInfo) {
     await Tabs.setIconForActiveTabs();
   },
 
+  /**
+   * @param {string} parentID
+   * @param {BrowserBookmarkRemoveInfo} removeInfo TODO
+   * @returns {Promise<void>}
+   */
   _onRemoved: async function(parentID, removeInfo) {
     await Tabs.setIconForActiveTabs();
   },

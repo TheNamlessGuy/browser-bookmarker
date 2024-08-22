@@ -6,10 +6,20 @@ const Icon = {
     BOOKMARKED_WITH_OTHER_URL: 'res/icons/favorited-other-url',
   },
 
+  /**
+   * @param {number} tabID
+   * @returns {Promise<boolean>}
+   */
   isShown: async function(tabID) {
     return await browser.pageAction.isShown({tabId: tabID});
   },
 
+  /**
+   * @param {number} tabID
+   * @param {string} state
+   * @param {string} title
+   * @returns {Promise<void>}
+   */
   show: async function(tabID, state, title) {
     const filetype = state === Icon.state.PROCESSING ? 'gif' : 'png';
 
@@ -28,10 +38,20 @@ const Icon = {
     await browser.pageAction.show(tabID);
   },
 
+  /**
+   * @param {number} tabID
+   * @returns {Promise<void>}
+   */
   hide: async function(tabID) {
     await browser.pageAction.hide(tabID);
   },
 
+  /**
+   * @param {number} tabID
+   * @param {string} state
+   * @param {string} title
+   * @returns {Promise<void>}
+   */
   setState: async function(tabID, state, title) {
     if (state == null) {
       await Icon.hide(tabID);
@@ -40,25 +60,28 @@ const Icon = {
     }
   },
 
+  /**
+   * @returns {Promise<void>}
+   */
   init: async function() {
     if (!browser.pageAction.onClicked.hasListener(Icon._onClicked)) {
       browser.pageAction.onClicked.addListener(Icon._onClicked);
     }
   },
 
+  /**
+   * @param {BrowserTab} tab TODO
+   * @param {BrowserOnPageActionClickedData} onClickData TODO
+   */
   _onClicked: async function(tab, onClickData) {
-    const data = {
+    Popups.open.handleBookmark(tab.id, {
       tab: {
         id: tab.id,
-        url: encodeURIComponent(tab.url),
+        url: tab.url,
         title: tab.title,
       },
 
       ignoreDefault: onClickData.modifiers.includes('Shift') || onClickData.button === 1,
-    };
-
-    browser.pageAction.setPopup({tabId: tab.id, popup: `/src/popup/index.html?data=${JSON.stringify(data)}`});
-    browser.pageAction.openPopup();
-    browser.pageAction.setPopup({tabId: tab.id, popup: ''});
+    });
   },
 };
