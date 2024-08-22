@@ -1,14 +1,21 @@
 class EntryAndThenElement extends HTMLElement {
   static _types = [
-    {value: 'set-url',          display: 'set the URL to',   _value: true},
+    {value: 'set-url',   display: 'set the URL to', _values: [{element: () => document.createElement('input'), nullable: false}]},
+    {value: 'set-title', display: 'set the title',  _values: [{element: () => EntryAndThenElement._inputWithLabel('Regex'), nullable: false}, {element: () => EntryAndThenElement._inputWithLabel('Result'), nullable: false}]},
   ];
+
+  static _inputWithLabel(label) {
+    const elem = document.createElement('c-labeled-input');
+    elem.label = label;
+    return elem;
+  }
 
   _entry = null;
 
   _errorContainer = null;
 
   _select = null;
-  _value = null;
+  _valueContainer = null;
 
   constructor() {
     super();
@@ -28,6 +35,12 @@ class EntryAndThenElement extends HTMLElement {
 
     container.appendChild(document.createTextNode(' And then '));
 
+    for (const type of EntryAndThenElement._types) {
+      for (let i = 0; i < type._values.length; ++i) {
+        type._values[i].element = type._values[i].element();
+      }
+    }
+
     this._select = document.createElement('select');
     for (const type of EntryAndThenElement._types) {
       const option = document.createElement('option');
@@ -35,12 +48,11 @@ class EntryAndThenElement extends HTMLElement {
       option.innerText = type.display;
       this._select.appendChild(option);
     }
-    this._select.addEventListener('change', this._setValueVisibility.bind(this));
+    this._select.addEventListener('change', this._onSelectChange.bind(this));
     container.appendChild(this._select);
 
-    this._value = document.createElement('input');
-    this._value.type = 'text';
-    container.appendChild(this._value);
+    this._valueContainer = document.createElement('span');
+    container.append(this._valueContainer);
 
     this.attachShadow({mode: 'closed'}).append(style, container);
   }
@@ -49,8 +61,12 @@ class EntryAndThenElement extends HTMLElement {
     this._entry = entry;
 
     this._select.value = data?.type ?? EntryAndThenElement._types[0].value;
-    this._value.value = data?.value ?? '';
-    this._setValueVisibility();
+    this._onSelectChange();
+
+    const selected = this._getSelectedEntry();
+    for (let i = 0; i < selected._values.length; ++i) {
+      selected._values[i].element.value = data?.values[i]?.value ?? '';
+    }
   }
 
   clearErrors() {
@@ -68,27 +84,38 @@ class EntryAndThenElement extends HTMLElement {
 
     let isValid = true;
 
-    if (this._getSelectedEntry()._value && this._value.value.trim() === '') {
-      this.addError('Value cannot be empty');
-      isValid = false;
+    const selected = this._getSelectedEntry();
+    for (let i = 0; i < selected._values.length; ++i) {
+      if (!selected._values[i].nullable && selected._values[i].element.value.trim() === '') {
+        this.addError(`Value ${i + 1} cannot be empty`);
+        isValid = false;
+      }
     }
 
     return isValid;
   }
 
   toJSON() {
+    const selected = this._getSelectedEntry();
     return {
       type: this._select.value,
-      value: this._value.value.trim(),
-    }
+      values: selected._values.map((x) => {
+        const value = x.element.value.trim();
+        return {value: (x.nullable && !value) ? null : value};
+      }),
+    };
   }
 
   _getSelectedEntry() {
     return EntryAndThenElement._types.find(x => x.value === this._select.value) ?? null;
   }
 
-  _setValueVisibility() {
-    this._value.style.display = this._getSelectedEntry()._value ? null : 'none';
+  _onSelectChange() {
+    while (this._valueContainer.children.length > 0) {
+      this._valueContainer.children[0].remove();
+    }
+
+    this._valueContainer.append(...this._getSelectedEntry()._values.map(x => x.element));
   }
 }
 

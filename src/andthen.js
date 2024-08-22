@@ -60,5 +60,22 @@ const AndThen = {
         return {url: new URL(retval)};
       },
     },
+
+    'set-title': {
+      automatic: true,
+      callback: async function(andThen, data) {
+        if (data.title == null) { return {}; }
+
+        const regex = new RegExp(andThen.values[0].value);
+        const matches = data.title.match(regex);
+
+        let retval = `${andThen.values[1].value}`;
+        for (let i = 1; i < matches.length; ++i) {
+          retval = retval.replaceAll(`{{${i}}}`, matches[i]);
+        }
+
+        return {title: retval};
+      },
+    },
   },
 }

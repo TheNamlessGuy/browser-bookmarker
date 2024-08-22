@@ -44,7 +44,7 @@
 /** EntryAndThen
  * @typedef {object} EntryAndThen
  * @property {string} type
- * @property {string|null} value
+ * @property {{value: string}[]} values
  */
 
 /** OptionsSaveExtras
@@ -102,6 +102,12 @@ const Opts = {
           if (!('andThen' in opts.areas[a].entries[e])) {
             opts.areas[a].entries[e].andThen = [];
             changed = true;
+          } else if (opts.areas[a].entries[e].andThen.length > 0 && 'value' in opts.areas[a].entries[e].andThen[0]) {
+            changed = true;
+            for (let and = 0; and < opts.areas[a].entries[e].andThen.length; ++and) {
+              opts.areas[a].entries[e].andThen[and].values = [{value: opts.areas[a].entries[e].andThen[and].value}];
+              delete opts.areas[a].entries[e].andThen[and].value;
+            }
           }
         }
       }
