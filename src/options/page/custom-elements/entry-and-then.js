@@ -35,9 +35,11 @@ class EntryAndThenElement extends HTMLElement {
 
     container.appendChild(document.createTextNode(' And then '));
 
-    for (const type of EntryAndThenElement._types) {
-      for (let i = 0; i < type._values.length; ++i) {
-        type._values[i].element = type._values[i].element();
+    if (!(EntryAndThenElement._types[0]._values[0].element instanceof HTMLElement)) {
+      for (const type of EntryAndThenElement._types) {
+        for (let i = 0; i < type._values.length; ++i) {
+          type._values[i].element = type._values[i].element();
+        }
       }
     }
 

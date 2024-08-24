@@ -52,7 +52,7 @@ const AndThen = {
         const regex = new RegExp(data.entry.regexStr);
         const matches = data.url.toString().match(regex);
 
-        let retval = `${data.url.protocol}//${andThen.value}`;
+        let retval = `${data.url.protocol}//${andThen.values[0].value}`;
         for (let i = 1; i < matches.length; ++i) {
           retval = retval.replaceAll(`{{${i}}}`, matches[i]);
         }
