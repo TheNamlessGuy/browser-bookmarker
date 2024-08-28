@@ -1,5 +1,5 @@
 class EntryAndThenElement extends HTMLElement {
-  static _types = [
+  _types = [
     {value: 'set-url',   display: 'set the URL to', _values: [{element: () => document.createElement('input'), nullable: false}]},
     {value: 'set-title', display: 'set the title',  _values: [{element: () => EntryAndThenElement._inputWithLabel('Regex'), nullable: false}, {element: () => EntryAndThenElement._inputWithLabel('Result'), nullable: false}]},
   ];
@@ -35,8 +35,8 @@ class EntryAndThenElement extends HTMLElement {
 
     container.appendChild(document.createTextNode(' And then '));
 
-    if (!(EntryAndThenElement._types[0]._values[0].element instanceof HTMLElement)) {
-      for (const type of EntryAndThenElement._types) {
+    if (!(this._types[0]._values[0].element instanceof HTMLElement)) {
+      for (const type of this._types) {
         for (let i = 0; i < type._values.length; ++i) {
           type._values[i].element = type._values[i].element();
         }
@@ -44,7 +44,7 @@ class EntryAndThenElement extends HTMLElement {
     }
 
     this._select = document.createElement('select');
-    for (const type of EntryAndThenElement._types) {
+    for (const type of this._types) {
       const option = document.createElement('option');
       option.value = type.value;
       option.innerText = type.display;
@@ -62,7 +62,7 @@ class EntryAndThenElement extends HTMLElement {
   init(entry, data = null) {
     this._entry = entry;
 
-    this._select.value = data?.type ?? EntryAndThenElement._types[0].value;
+    this._select.value = data?.type ?? this._types[0].value;
     this._onSelectChange();
 
     const selected = this._getSelectedEntry();
@@ -109,7 +109,7 @@ class EntryAndThenElement extends HTMLElement {
   }
 
   _getSelectedEntry() {
-    return EntryAndThenElement._types.find(x => x.value === this._select.value) ?? null;
+    return this._types.find(x => x.value === this._select.value) ?? null;
   }
 
   _onSelectChange() {
