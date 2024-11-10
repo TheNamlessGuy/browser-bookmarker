@@ -68,9 +68,9 @@ const Communication = {
     'bookmarks--get-entry-matching': async function(msg) { return {result: await Bookmarks.getEntryMatching(msg.url)}; },
     /**
      * @param {{url: string, entry: Entry}} msg
-     * @returns {Promise<result: {bookmark: BrowserBookmark|null, path: EntryPath|null}>}
+     * @returns {Promise<result: {bookmark: BrowserBookmark|null, path: EntryPath|null}[]>}
      */
-    'bookmarks--get-bookmark-and-path-matching': async function(msg) { return {result: await Bookmarks.getBookmarkAndPathMatching(msg.url, msg.entry)}; },
+    'bookmarks--get-bookmarks-and-paths-matching': async function(msg) { return {result: await Bookmarks.getBookmarksAndPathsMatching(msg.url, msg.entry)}; },
     /**
      * @returns {Promise<void>}
      */

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Bookmarker",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Bookmark tabs easier",
   "author": "TheNamlessGuy",
   "homepage_url": "https://github.com/TheNamlessGuy/bookmarker",
@@ -11,11 +11,7 @@
   },
 
   "icons": {
-    "16": "res/icons/favorited/16.png",
-    "19": "res/icons/favorited/19.png",
-    "32": "res/icons/favorited/32.png",
-    "38": "res/icons/favorited/38.png",
-    "48": "res/icons/favorited/48.png"
+    "48": "res/icons/favorited/48.light.png"
   },
 
   "permissions": [
@@ -29,11 +25,7 @@
   "page_action": {
     "browser_style": true,
     "default_icon": {
-      "16": "res/icons/processing/16.gif",
-      "19": "res/icons/processing/19.gif",
-      "32": "res/icons/processing/32.gif",
-      "38": "res/icons/processing/38.gif",
-      "48": "res/icons/processing/48.gif"
+      "48": "res/icons/processing/48.light.gif"
     },
     "default_title": "Bookmarker"
   },

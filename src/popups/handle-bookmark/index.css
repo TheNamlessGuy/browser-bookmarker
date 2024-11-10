@@ -12,3 +12,7 @@
   flex-direction: column;
   flex-grow: 1;
 }
+
+hr {
+  width: 98%;
+}

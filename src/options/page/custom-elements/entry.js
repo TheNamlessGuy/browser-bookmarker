@@ -134,6 +134,17 @@ input, button {
   addPath(data = null) {
     const path = document.createElement('c-entry-path');
     path.init(this, data);
+
+    path.addEventListener('move-up', () => {
+      this._pathContainer.insertBefore(path, path.previousSibling);
+      this.paths.forEach(x => x.toggleButtonDisabledState());
+    });
+
+    path.addEventListener('move-down', () => {
+      this._pathContainer.insertBefore(path, path.nextSibling?.nextSibling);
+      this.paths.forEach(x => x.toggleButtonDisabledState());
+    });
+
     path.addEventListener('default-changed', () => {
       if (!path.default) { return; }
 
@@ -149,6 +160,7 @@ input, button {
     }
 
     this._pathContainer.appendChild(path);
+    this.paths.forEach(x => x.toggleButtonDisabledState());
   }
 
   get andThen() {
@@ -201,6 +213,10 @@ input, button {
     }
 
     return isValid;
+  }
+
+  getPathIndex(path) {
+    return this.paths.findIndex(x => x === path);
   }
 
   toJSON() {

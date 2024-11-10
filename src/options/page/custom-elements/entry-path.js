@@ -7,6 +7,9 @@ class EntryPathElement extends HTMLElement {
   _default = null;
   _prefix = null;
 
+  _upBtn = null;
+  _downBtn = null;
+
   constructor() {
     super();
 
@@ -21,6 +24,16 @@ input, button {
 
     this._errorContainer = document.createElement('div');
     container.appendChild(this._errorContainer);
+
+    this._upBtn = document.createElement('button');
+    this._upBtn.innerText = '↑';
+    this._upBtn.addEventListener('click', () => this.dispatchEvent(new Event('move-up')));
+    container.appendChild(this._upBtn);
+
+    this._downBtn = document.createElement('button');
+    this._downBtn.innerText = '↓';
+    this._downBtn.addEventListener('click', () => this.dispatchEvent(new Event('move-down')));
+    container.appendChild(this._downBtn);
 
     const removeBtn = document.createElement('button');
     removeBtn.innerText = '🗑';
@@ -110,6 +123,14 @@ input, button {
     }
 
     return isValid;
+  }
+
+  toggleButtonDisabledState() {
+    const idx = this._entry.getPathIndex(this);
+    const total = this._entry.paths.length;
+
+    this._upBtn.disabled = (idx === 0);
+    this._downBtn.disabled = (idx === total - 1);
   }
 
   toJSON() {

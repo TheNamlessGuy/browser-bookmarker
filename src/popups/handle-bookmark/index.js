@@ -30,10 +30,10 @@ const BackgroundPage = {
   /**
    * @param {string} url
    * @param {Entry} entry
-   * @returns {Promise<result: {bookmark: BrowserBookmark|null, path: EntryPath|null}>}
+   * @returns {Promise<result: {bookmark: BrowserBookmark|null, path: EntryPath|null}[]>}
    */
-  getBookmarkAndPathMatching: async function(url, entry) {
-    return (await BackgroundPage.send('bookmarks--get-bookmark-and-path-matching', {url, entry})).result;
+  getBookmarksAndPathsMatching: async function(url, entry) {
+    return (await BackgroundPage.send('bookmarks--get-bookmarks-and-paths-matching', {url, entry})).result;
   },
 
   /**
@@ -60,14 +60,37 @@ const BackgroundPage = {
   },
 };
 
-const Mode = {
-  _setPaths: function(entry) {
-    const select = document.getElementById('paths');
+const Bookmarks = {
+  /**
+   * @param {HandleBookmarkData} data
+   * @param {Entry} entry
+   * @param {{bookmark: BrowserBookmark|null, path: EntryPath|null}[]} bookmarks
+   */
+  init: function(data, entry, bookmarks) {
+    // "Add new bookmark" stuff
+    Bookmarks._setPaths(entry.paths, Bookmarks.elements.addPaths);
+    Bookmarks.elements.addBtn.addEventListener('click', () => {
+      BackgroundPage.add(data.tab.url, data.tab.title, entry, Bookmarks._getSelectedPath(Bookmarks.elements.addPaths, entry));
+      window.close();
+    });
+
+    // Already added bookmarks stuff
+    for (let i = 0; i < bookmarks.length; ++i) {
+      Bookmarks._addBookmarkElement(data, entry, bookmarks[i].bookmark, bookmarks[i].path);
+      Bookmarks.elements.container.appendChild(document.createElement('hr'));
+    }
+  },
+
+  /**
+   * @param {EntryPath[]} paths
+   * @param {HTMLSelectElement} select
+   */
+  _setPaths: function(paths, select) {
     while (select.firstChild) {
       select.removeChild(select.lastChild);
     }
 
-    for (const path of entry.paths) {
+    for (const path of paths) {
       const option = document.createElement('option');
       option.value = path.title;
       option.innerText = path.title;
@@ -75,72 +98,85 @@ const Mode = {
     }
   },
 
-  _getSelectedPath: function(entry) {
-    const paths = document.getElementById('paths');
-    return entry.paths.find(x => x.title === paths.value);
+  /**
+   * @param {HTMLSelectElement} select
+   * @param {Entry} entry
+   */
+  _getSelectedPath: function(select, entry) {
+    return entry.paths.find(x => x.title === select.value);
   },
 
-  _loaded: function() {
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('loaded').classList.remove('hidden');
-  },
+  /**
+   * @param {HandleBookmarkData} data
+   * @param {Entry} entry
+   * @param {BrowserBookmark} bookmark
+   * @param {EntryPath} path
+   */
+  _addBookmarkElement: function(data, entry, bookmark, path) {
+    const container = document.createElement('div');
 
-  add: function(data, entry) {
-    const defaultPath = entry.paths.find(x => x.default) ?? null;
+    const select = document.createElement('select');
+    Bookmarks._setPaths(entry.paths, select);
+    select.value = path.title;
+    select.addEventListener('change', () => moveBtn.disabled = select.value === path.title);
+    container.appendChild(select);
 
-    if (defaultPath != null && !data.ignoreDefault) {
-      BackgroundPage.add(data.tab.url, data.tab.title, entry, defaultPath);
+    const moveBtn = document.createElement('button');
+    moveBtn.innerText = 'Move bookmark';
+    moveBtn.addEventListener('click', () => {
+      BackgroundPage.move(bookmark.id, Bookmarks._getSelectedPath(select, entry));
       window.close();
-      return;
+    });
+    container.appendChild(moveBtn);
+
+    if (data.tab.url === bookmark.url) {
+      const moveToBtn = document.createElement('button');
+      moveToBtn.innerText = 'Move to bookmark';
+      moveToBtn.addEventListener('click', () => {
+        BackgroundPage.moveTo(data.tab.id, bookmark.url);
+        window.close();
+      });
+      container.appendChild(moveBtn);
     }
 
-    Mode._setPaths(entry);
-    document.getElementById('add-mode').classList.remove('hidden');
-    document.getElementById('add-btn').addEventListener('click', () => {
-      BackgroundPage.add(data.tab.url, data.tab.title, entry, Mode._getSelectedPath(entry));
-      window.close();
-    });
-
-    Mode._loaded();
-  },
-
-  show: function(data, entry, bookmark, path) {
-    Mode._setPaths(entry);
-    document.getElementById('show-mode').classList.remove('hidden');
-
-    const moveBtn = document.getElementById('move-btn');
-    moveBtn.addEventListener('click', () => {
-      BackgroundPage.move(bookmark.id, Mode._getSelectedPath(entry));
-      window.close();
-    });
-
-    const moveToBtn = document.getElementById('move-to-btn');
-    moveToBtn.classList.toggle('hidden', data.tab.url === bookmark.url);
-    moveToBtn.addEventListener('click', () => {
-      BackgroundPage.moveTo(data.tab.id, bookmark.url);
-      window.close();
-    });
-
-    const removeBtn = document.getElementById('remove-btn');
+    const removeBtn = document.createElement('button');
+    removeBtn.innerText = 'Remove bookmark';
     removeBtn.addEventListener('click', () => {
       BackgroundPage.remove(bookmark.id);
       window.close();
     });
+    container.appendChild(removeBtn);
 
-    const paths = document.getElementById('paths');
-    paths.value = path.title;
-    paths.addEventListener('change', () => moveBtn.disabled = paths.value === path.title);
+    Bookmarks.elements.container.appendChild(container);
+  },
 
-    Mode._loaded();
+  elements: {
+    get container() {
+      return document.getElementById('bookmark-container');
+    },
+
+    get addBtn() {
+      return document.getElementById('add-btn');
+    },
+
+    get addPaths() {
+      return document.getElementById('add-paths');
+    },
   },
 };
 
 const QueryParameters = {
+  /**
+   * @returns {HandleBookmarkData}
+   */
   data: function() {
     const url = new URL(window.location.href);
     return JSON.parse(url.searchParams.get('data'));
   },
 
+  /**
+   * @returns {number}
+   */
   tabID: function() {
     const url = new URL(window.location.href);
     return parseInt(url.searchParams.get('tabID'), 10);
@@ -157,10 +193,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  const {bookmark, path} = await BackgroundPage.getBookmarkAndPathMatching(data.tab.url, entry);
-  if (bookmark == null) {
-    Mode.add(data, entry);
+  const bookmarks = await BackgroundPage.getBookmarksAndPathsMatching(data.tab.url, entry);
+  const defaultPath = entry.paths.find(x => x.default) ?? null;
+  if (bookmarks.length === 0 && defaultPath != null && !data.ignoreDefault) {
+    BackgroundPage.add(data.tab.url, data.tab.title, entry, defaultPath);
+    window.close();
   } else {
-    Mode.show(data, entry, bookmark, path);
+    Bookmarks.init(data, entry, bookmarks);
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('loaded').classList.remove('hidden');
   }
 });

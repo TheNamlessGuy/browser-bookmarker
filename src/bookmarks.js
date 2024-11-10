@@ -231,9 +231,9 @@ const Bookmarks = {
   /**
    * @param {string} url
    * @param {Entry} entry
-   * @returns {{bookmark: BrowserBookmark|null, path: EntryPath|null}}
+   * @returns {{bookmark: BrowserBookmark|null, path: EntryPath|null}[]}
    */
-  getBookmarkAndPathMatching: async function(url, entry) {
+  getBookmarksAndPathsMatching: async function(url, entry) {
     url = Bookmarks.format(url, entry);
     const response = await AndThen.do({
       url: url,
@@ -244,16 +244,17 @@ const Bookmarks = {
     url = Bookmarks._urlToString(response.url, true);
     const results = await browser.bookmarks.search({url: url});
 
+    const retval = [];
     for (let r = 0; r < results.length; ++r) {
       for (const path of entry.paths) {
         const folder = await Bookmarks.getBookmarksFolderForPath(path, false);
         if (folder != null && results[r].parentId === folder.id) {
-          return {bookmark: results[r], path: path};
+          retval.push({bookmark: results[r], path: path});
         }
       }
     }
 
-    return {bookmark: null, path: null};
+    return retval;
   },
 
   /**
@@ -275,23 +276,34 @@ const Bookmarks = {
     }
 
     // Do we have any bookmarks under this entry/url combo?
-    const {bookmark, path} = await Bookmarks.getBookmarkAndPathMatching(url, entry);
-    if (bookmark == null) {
+    const data = await Bookmarks.getBookmarksAndPathsMatching(url, entry);
+    if (data.length === 0) {
       return {
         state: Icon.state.NOT_BOOKMARKED,
         title: `Add '${entry.area}' bookmark`,
       };
-    } else if (bookmark.url === url) {
-      return {
-        state: Icon.state.BOOKMARKED,
-        title: `Bookmarked as a '${entry.area}' ${path.title}`,
-      };
     }
 
-    return {
-      state: Icon.state.BOOKMARKED_WITH_OTHER_URL,
-      title: `Bookmarked as a '${entry.area}' ${path.title} (but with another URL)`,
-    };
+    let title = '';
+    let state = Icon.state.BOOKMARKED_WITH_OTHER_URL;
+    for (let i = 0; i < data.length; ++i) {
+      const entry = data[i];
+
+      if (i === data.length - 1) {
+        title += ', and ';
+      } else if (i > 0) {
+        title += ', ';
+      }
+
+      if (entry.bookmark.url === url) {
+        title += entry.path.title;
+        state = Icon.state.BOOKMARKED;
+      } else {
+        title += `${entry.path.title} (but with another URL)`;
+      }
+    }
+
+    return {state, title};
   },
 
   /**
@@ -349,10 +361,10 @@ const Bookmarks = {
     const entry = await Bookmarks.getEntryMatching(fromURL);
     if (entry == null || !entry.opts.followRedirects) { return; }
 
-    const {bookmark, path} = await Bookmarks.getBookmarkAndPathMatching(fromURL, entry);
-    if (bookmark == null) { return; }
-
-    await browser.bookmarks.update(bookmark.id, {url: toURL});
+    const data = await Bookmarks.getBookmarksAndPathsMatching(fromURL, entry);
+    for (const entry of data) {
+      await browser.bookmarks.update(entry.bookmark.id, {url: toURL});
+    }
   },
 
   /**

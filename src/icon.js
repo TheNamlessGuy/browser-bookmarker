@@ -22,15 +22,12 @@ const Icon = {
    */
   show: async function(tabID, state, title) {
     const filetype = state === Icon.state.PROCESSING ? 'gif' : 'png';
+    const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
     await browser.pageAction.setIcon({
         tabId: tabID,
         path: {
-          16: `${state}/16.${filetype}`,
-          19: `${state}/19.${filetype}`,
-          32: `${state}/32.${filetype}`,
-          38: `${state}/38.${filetype}`,
-          48: `${state}/48.${filetype}`,
+          48: `${state}/48.${theme}.${filetype}`,
         },
     });
 
