@@ -129,14 +129,16 @@ const Bookmarks = {
     });
     container.appendChild(moveBtn);
 
-    if (data.tab.url === bookmark.url) {
+    select.dispatchEvent(new Event('change'));
+
+    if (data.tab.url !== bookmark.url) {
       const moveToBtn = document.createElement('button');
       moveToBtn.innerText = 'Move to bookmark';
       moveToBtn.addEventListener('click', () => {
         BackgroundPage.moveTo(data.tab.id, bookmark.url);
         window.close();
       });
-      container.appendChild(moveBtn);
+      container.appendChild(moveToBtn);
     }
 
     const removeBtn = document.createElement('button');
