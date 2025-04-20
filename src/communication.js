@@ -34,11 +34,11 @@ const Communication = {
     /**
      * @returns {Promise<{result: boolean}>}
      */
-    'save-using-bookmark': async function() { return {result: BookmarkOpts._saveUsingBookmark}; },
+    'save-using-bookmark': async function() { return {result: await Opts.hasBookmarkSaves()}; },
     /**
      * @returns {Promise<{result: Options}>}
      */
-    'get-default-options': async function() { return {result: Opts._default}; },
+    'get-default-options': async function() { return {result: Opts.DEFAULT}; },
 
     /**
      * @param {{tabID: number, url: string}} msg

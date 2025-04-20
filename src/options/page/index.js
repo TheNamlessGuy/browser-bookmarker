@@ -101,7 +101,7 @@ async function save() {
 
   const opts = await BackgroundPage.getDefaultOpts();
   const extras = {
-    saveUsingBookmarkOverride: general.saveUsingBookmark,
+    saveUsingBookmark: general.saveUsingBookmark,
   };
 
   opts.general = general.toJSON();

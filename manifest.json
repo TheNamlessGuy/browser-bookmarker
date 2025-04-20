@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Bookmarker",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Bookmark tabs easier",
   "author": "TheNamlessGuy",
   "homepage_url": "https://github.com/TheNamlessGuy/bookmarker",
@@ -32,7 +32,8 @@
 
   "background": {
     "scripts": [
-      "src/options/bookmark.js",
+      "common/browser/background/base-options.js",
+
       "src/options/opts.js",
       "src/communication.js",
       "src/bookmarks.js",
