@@ -14,3 +14,6 @@ The download page is [here](https://addons.mozilla.org/en-US/firefox/addon/namle
 * Instead of "default", have "sequence". The first time you click the page action, go to sequence 1, then 2 on the second click, and so on. If there isn't a (current sequence + 1), open the modal
 * Include hash [x]
 * "Keep folder sorted" [x]
+
+## Cross-hosted
+This repository is hosted both on [GitHub](https://github.com/TheNamlessGuy/browser-bookmarker) and [Codeberg](https://codeberg.org/TheNamlessGuy/browser-bookmarker).
