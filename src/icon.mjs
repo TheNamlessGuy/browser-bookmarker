@@ -1,18 +1,28 @@
-const Icon = {
-  state: {
+import { Popups } from "./popups.mjs";
+
+/** @typedef {(typeof Icon.state)[keyof typeof Icon.state]} IconState */
+
+export class Icon {
+  static state = /** @type {const} */ ({
     PROCESSING: 'res/icons/processing',
     BOOKMARKED: 'res/icons/favorited',
     NOT_BOOKMARKED: 'res/icons/not-favorited',
     BOOKMARKED_WITH_OTHER_URL: 'res/icons/favorited-other-url',
-  },
+  })
+
+  static async init() {
+    if (!browser.pageAction.onClicked.hasListener(Icon._onClicked)) {
+      browser.pageAction.onClicked.addListener(Icon._onClicked);
+    }
+  }
 
   /**
    * @param {number} tabID
    * @returns {Promise<boolean>}
    */
-  isShown: async function(tabID) {
+  static async isShown(tabID) {
     return await browser.pageAction.isShown({tabId: tabID});
-  },
+  }
 
   /**
    * @param {number} tabID
@@ -20,7 +30,7 @@ const Icon = {
    * @param {string} title
    * @returns {Promise<void>}
    */
-  show: async function(tabID, state, title) {
+  static async show(tabID, state, title) {
     const filetype = state === Icon.state.PROCESSING ? 'gif' : 'png';
     const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
@@ -33,15 +43,15 @@ const Icon = {
 
     await browser.pageAction.setTitle({tabId: tabID, title: title});
     await browser.pageAction.show(tabID);
-  },
+  }
 
   /**
    * @param {number} tabID
    * @returns {Promise<void>}
    */
-  hide: async function(tabID) {
+  static async hide(tabID) {
     await browser.pageAction.hide(tabID);
-  },
+  }
 
   /**
    * @param {number} tabID
@@ -49,36 +59,28 @@ const Icon = {
    * @param {string} title
    * @returns {Promise<void>}
    */
-  setState: async function(tabID, state, title) {
+  static async setState(tabID, state, title) {
     if (state == null) {
       await Icon.hide(tabID);
     } else {
       await Icon.show(tabID, state, title);
     }
-  },
+  }
 
   /**
+   * @param {browser.tabs.Tab} tab
+   * @param {browser.pageAction.OnClickData|undefined} info
    * @returns {Promise<void>}
    */
-  init: async function() {
-    if (!browser.pageAction.onClicked.hasListener(Icon._onClicked)) {
-      browser.pageAction.onClicked.addListener(Icon._onClicked);
-    }
-  },
-
-  /**
-   * @param {BrowserTab} tab TODO
-   * @param {BrowserOnPageActionClickedData} onClickData TODO
-   */
-  _onClicked: async function(tab, onClickData) {
-    Popups.open.handleBookmark(tab.id, {
+  static async _onClicked(tab, info) {
+    Popups.open.handleBookmark(tab.id ?? browser.tabs.TAB_ID_NONE, {
       tab: {
-        id: tab.id,
-        url: tab.url,
-        title: tab.title,
+        id: tab.id ?? browser.tabs.TAB_ID_NONE,
+        url: tab.url ?? '',
+        title: tab.title ?? '',
       },
 
-      ignoreDefault: onClickData.modifiers.includes('Shift') || onClickData.button === 1,
+      ignoreDefault: (info?.modifiers.includes('Shift') || info?.button === 1) ?? false,
     });
-  },
-};
+  }
+}

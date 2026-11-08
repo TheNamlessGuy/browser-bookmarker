@@ -1,16 +1,36 @@
-class PathElement extends HTMLElement {
+/** @import {OptionType_Prefix} from '../../opts.mjs' */
+
+import { onDOMContentLoaded } from "../../../../common/browser/general/onDOMContentLoaded.mjs";
+import { ErrorElement } from "./error.mjs";
+
+/** Choice
+ * @typedef {object} Choice
+ * @property {string} value
+ * @property {string} display
+ * @property {boolean|(() => boolean)} editable
+ * @property {HTMLOptionElement} [element] Internal only
+ */
+
+export class PathElement extends HTMLElement {
+  /** @type {HTMLDivElement} */
   _container = null;
 
+  /** @type {HTMLSelectElement} */
   _select = null;
+  /** @type {Choice[]} */
   _options = [];
 
+  /** @type {HTMLSpanElement} */
   _segmentContainer = null;
 
   _buttons = {
+    /** @type {HTMLButtonElement} */
     add: null,
+    /** @type {HTMLButtonElement} */
     remove: null,
   };
 
+  /** @type {HTMLSpanElement} */
   _errorContainer = null;
 
   constructor() {
@@ -58,11 +78,9 @@ select, button, input {
     this.attachShadow({mode: 'closed'}).append(style, this._container);
   }
 
-  /**
-   * @param {{value: string, display: string, editable: boolean|() => boolean}[]} choices
-   */
+  /** @param {Choice[]} choices */
   options(choices) {
-    this._options.forEach(x => x.remove());
+    this._options.forEach(x => x.element?.remove());
     this._options = choices;
 
     for (const choice of choices) {
@@ -76,9 +94,7 @@ select, button, input {
     this._toggleButtonDisabledStatus();
   }
 
-  /**
-   * @param {{root: string, path: string[]}} data
-   */
+  /** @param {OptionType_Prefix<any>|null} data */
   init(data = null) {
     if (data?.root != null) {
       this._select.value = data.root;
@@ -89,6 +105,7 @@ select, button, input {
     }
   }
 
+  /** @param {string|null} data */
   addSegment(data = null) {
     const segment = document.createElement('span');
     segment.classList.add('segment');
@@ -132,11 +149,11 @@ select, button, input {
   }
 
   get _segments() {
-    return Array.from(this._segmentContainer.getElementsByClassName('segment'));
+    return /** @type {HTMLSpanElement[]} */ (Array.from(this._segmentContainer.getElementsByClassName('segment')));
   }
 
   get _values() {
-    return this._segments.map(x => x.getElementsByClassName('segment-input')[0].value);
+    return this._segments.map(x => (/** @type {HTMLInputElement} */ (x.getElementsByClassName('segment-input')[0])).value);
   }
 
   removeSegment() {
@@ -147,16 +164,24 @@ select, button, input {
     this.dispatchEvent(new Event('change'));
   }
 
+  /**
+   * @param {string} value
+   * @returns {Choice}
+   */
   _getOption(value = null) {
     value = value ?? this._select.value;
     return this._options.find(x => x.value === value);
   }
 
+  /**
+   * @param {string} value
+   * @returns {boolean}
+   */
   _getIsEditable(value = null) {
     const option = this._getOption(value);
 
     let editable = option.editable;
-    if (![true, false].includes(editable)) {
+    if (editable !== true && editable !== false) {
       editable = editable();
     }
 
@@ -178,8 +203,9 @@ select, button, input {
     Array.from(this._errorContainer.children).forEach(x => x.remove());
   }
 
+  /** @param {string} msg */
   addError(msg) {
-    const error = document.createElement('c-error');
+    const error = new ErrorElement();
     error.message = msg;
     this._errorContainer.appendChild(error);
   }
@@ -212,6 +238,7 @@ select, button, input {
     return true;
   }
 
+  /** @returns {OptionType_Prefix<any>} */
   toJSON() {
     return {
       root: this.selectValue,
@@ -220,4 +247,4 @@ select, button, input {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => customElements.define('c-path', PathElement));
+onDOMContentLoaded(() => customElements.define('c-path', PathElement));

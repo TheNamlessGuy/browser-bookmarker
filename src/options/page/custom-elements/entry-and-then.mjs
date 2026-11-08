@@ -1,20 +1,62 @@
-class EntryAndThenElement extends HTMLElement {
+/** @import {OptionType_Area_Entry_AndThen} from '../../opts.mjs' */
+
+import { onDOMContentLoaded } from "../../../../common/browser/general/onDOMContentLoaded.mjs";
+import { EntryElement } from "./entry.mjs";
+import { ErrorElement } from "./error.mjs";
+import { LabeledInputElement } from "./labeled-input.mjs";
+
+/** ValidValueElementType
+ * @typedef {HTMLInputElement|LabeledInputElement} ValidValueElementType
+ */
+
+/** Type
+ * @typedef {object} Type
+ * @property {string} value
+ * @property {string} display
+ * @property {TypeValue[]} _values
+ */
+/** TypeValue
+ * @typedef {object} TypeValue
+ * @property {() => ValidValueElementType} element
+ * @property {boolean} nullable
+ */
+
+/** ProcessedType
+ * @typedef {Omit<Type, '_values'> & {_values: ProcessedTypeValue[]}} ProcessedType
+ */
+/** ProcessedTypeValue
+ * @typedef {Omit<TypeValue, 'element'> & {element: ValidValueElementType}} ProcessedTypeValue
+ */
+
+export class EntryAndThenElement extends HTMLElement {
+  /** @type {Type[]} */
   _types = [
     {value: 'set-url',   display: 'set the URL to', _values: [{element: () => document.createElement('input'), nullable: false}]},
     {value: 'set-title', display: 'set the title',  _values: [{element: () => EntryAndThenElement._inputWithLabel('Regex'), nullable: false}, {element: () => EntryAndThenElement._inputWithLabel('Result'), nullable: false}]},
   ];
 
+  /** @type {ProcessedType[]} */
+  _processedTypes = [];
+
+  /**
+   * @param {string} label
+   * @returns {LabeledInputElement}
+   */
   static _inputWithLabel(label) {
-    const elem = document.createElement('c-labeled-input');
+    const elem = new LabeledInputElement();
     elem.label = label;
     return elem;
   }
 
+  /** @type {EntryElement} */
   _entry = null;
 
+  /** @type {HTMLDivElement} */
   _errorContainer = null;
 
+  /** @type {HTMLSelectElement} */
   _select = null;
+  /** @type {HTMLSpanElement} */
   _valueContainer = null;
 
   constructor() {
@@ -35,16 +77,25 @@ class EntryAndThenElement extends HTMLElement {
 
     container.appendChild(document.createTextNode(' And then '));
 
-    if (!(this._types[0]._values[0].element instanceof HTMLElement)) {
+    if (this._processedTypes.length !== this._types.length) {
+      this._processedTypes = [];
+
       for (const type of this._types) {
-        for (let i = 0; i < type._values.length; ++i) {
-          type._values[i].element = type._values[i].element();
-        }
+        this._processedTypes.push({
+          value: type.value,
+          display: type.display,
+          _values: type._values.map(x => {
+            return {
+              nullable: x.nullable,
+              element: x.element(),
+            };
+          }),
+        });
       }
     }
 
     this._select = document.createElement('select');
-    for (const type of this._types) {
+    for (const type of this._processedTypes) {
       const option = document.createElement('option');
       option.value = type.value;
       option.innerText = type.display;
@@ -59,10 +110,14 @@ class EntryAndThenElement extends HTMLElement {
     this.attachShadow({mode: 'closed'}).append(style, container);
   }
 
+  /**
+   * @param {EntryElement} entry
+   * @param {OptionType_Area_Entry_AndThen} [data=null]
+   */
   init(entry, data = null) {
     this._entry = entry;
 
-    this._select.value = data?.type ?? this._types[0].value;
+    this._select.value = data?.type ?? this._processedTypes[0].value;
     this._onSelectChange();
 
     const selected = this._getSelectedEntry();
@@ -75,8 +130,9 @@ class EntryAndThenElement extends HTMLElement {
     Array.from(this._errorContainer.children).forEach(x => x.remove());
   }
 
+  /** @param {string} msg */
   addError(msg) {
-    const error = document.createElement('c-error');
+    const error = new ErrorElement();
     error.message = msg;
     this._errorContainer.appendChild(error);
   }
@@ -87,6 +143,16 @@ class EntryAndThenElement extends HTMLElement {
     let isValid = true;
 
     const selected = this._getSelectedEntry();
+
+    if (selected.value === 'set-title') {
+      try {
+        new RegExp(selected._values[0].element.value);
+      } catch (error) {
+        this.addError(`Invalid title regex: ${error}`);
+        isValid = false;
+      }
+    }
+
     for (let i = 0; i < selected._values.length; ++i) {
       if (!selected._values[i].nullable && selected._values[i].element.value.trim() === '') {
         this.addError(`Value ${i + 1} cannot be empty`);
@@ -97,6 +163,7 @@ class EntryAndThenElement extends HTMLElement {
     return isValid;
   }
 
+  /** @returns {OptionType_Area_Entry_AndThen} */
   toJSON() {
     const selected = this._getSelectedEntry();
     return {
@@ -109,7 +176,7 @@ class EntryAndThenElement extends HTMLElement {
   }
 
   _getSelectedEntry() {
-    return this._types.find(x => x.value === this._select.value) ?? null;
+    return this._processedTypes.find(x => x.value === this._select.value) ?? null;
   }
 
   _onSelectChange() {
@@ -121,4 +188,4 @@ class EntryAndThenElement extends HTMLElement {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => customElements.define('c-entry-and-then', EntryAndThenElement));
+onDOMContentLoaded(() => customElements.define('c-entry-and-then', EntryAndThenElement));

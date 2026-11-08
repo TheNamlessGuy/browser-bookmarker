@@ -4,12 +4,11 @@
  * @property {boolean} ignoreDefault
  */
 
-const Popups = {
-  open: {
+export class Popups {
+  static open = {
     /**
      * @param {number} tabID
      * @param {HandleBookmarkData} data
-     * @returns {void}
      */
     handleBookmark: function(tabID, data) {
       Popups.open._do(tabID, 'handle-bookmark', data);
@@ -20,5 +19,5 @@ const Popups = {
       browser.pageAction.openPopup();
       browser.pageAction.setPopup({tabId: tabID, popup: ''});
     },
-  },
-};
+  }
+}

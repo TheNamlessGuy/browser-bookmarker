@@ -1,16 +1,32 @@
-class EntryElement extends HTMLElement {
+/** @import {OptionType_Area_Entry, OptionType_Area_Entry_Path, OptionType_Area_Entry_AndThen} from '../../opts.mjs' */
+
+import { onDOMContentLoaded } from "../../../../common/browser/general/onDOMContentLoaded.mjs";
+import { AreaElement } from "./area.mjs";
+import { EntryAndThenElement } from "./entry-and-then.mjs";
+import { EntryPathElement } from "./entry-path.mjs";
+import { ErrorElement } from "./error.mjs";
+
+export class EntryElement extends HTMLElement {
+  /** @type {AreaElement} */
   _area = null;
 
+  /** @type {HTMLDivElement} */
   _errorContainer = null;
 
+  /** @type {HTMLInputElement} */
   _regex = null;
+  /** @type {HTMLInputElement} */
   _parameters = null;
 
+  /** @type {HTMLDivElement} */
   _pathContainer = null;
+  /** @type {HTMLDivElement} */
   _andThenContainer = null;
 
   _buttons = {
+    /** @type {HTMLButtonElement} */
     up: null,
+    /** @type {HTMLButtonElement} */
     down: null,
   };
 
@@ -92,7 +108,7 @@ input, button {
 
   /**
    * @param {AreaElement} area
-   * @param {{regex: string, paths: EntryPathElement[], parameters: string[], andThen: EntryAndThenElement[]}} data
+   * @param {OptionType_Area_Entry|null} data
    */
   init(area, data) {
     this._area = area;
@@ -128,11 +144,12 @@ input, button {
   }
 
   get paths() {
-    return Array.from(this._pathContainer.getElementsByTagName('c-entry-path'));
+    return /** @type {EntryPathElement[]} */ (Array.from(this._pathContainer.getElementsByTagName('c-entry-path')));
   }
 
+  /** @param {OptionType_Area_Entry_Path} data */
   addPath(data = null) {
-    const path = document.createElement('c-entry-path');
+    const path = new EntryPathElement();
     path.init(this, data);
 
     path.addEventListener('move-up', () => {
@@ -156,7 +173,7 @@ input, button {
     });
 
     if (data == null) {
-      path.path.selectValue = this._area.prefix.selectValue !== '' ? 'prefix' : 'toolbar_____';
+      path.path.selectValue = this._area.path.selectValue !== '' ? 'prefix' : 'toolbar_____';
     }
 
     this._pathContainer.appendChild(path);
@@ -164,11 +181,12 @@ input, button {
   }
 
   get andThen() {
-    return Array.from(this._andThenContainer.getElementsByTagName('c-entry-and-then'));
+    return /** @type {EntryAndThenElement[]} */ (Array.from(this._andThenContainer.getElementsByTagName('c-entry-and-then')));
   }
 
+  /** @param {OptionType_Area_Entry_AndThen} data */
   addAndThen(data = null) {
-    const andThen = document.createElement('c-entry-and-then');
+    const andThen = new EntryAndThenElement();
     andThen.init(this, data);
     this._andThenContainer.appendChild(andThen);
   }
@@ -177,8 +195,9 @@ input, button {
     Array.from(this._errorContainer.children).forEach(x => x.remove());
   }
 
+  /** @param {string} msg */
   addError(msg) {
-    const error = document.createElement('c-error');
+    const error = new ErrorElement();
     error.message = msg;
     this._errorContainer.appendChild(error);
   }
@@ -215,10 +234,15 @@ input, button {
     return isValid;
   }
 
+  /**
+   * @param {EntryPathElement} path
+   * @returns {number}
+   */
   getPathIndex(path) {
     return this.paths.findIndex(x => x === path);
   }
 
+  /** @returns {OptionType_Area_Entry} */
   toJSON() {
     const parameters = this._parameters.value.trim().split(',').filter(x => x !== '');
 
@@ -231,4 +255,4 @@ input, button {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => customElements.define('c-entry', EntryElement));
+onDOMContentLoaded(() => customElements.define('c-entry', EntryElement));

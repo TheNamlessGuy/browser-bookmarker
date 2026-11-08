@@ -19,6 +19,7 @@
     "activeTab",
     "bookmarks",
     "storage",
+    "webRequest",
     "unlimitedStorage"
   ],
 
@@ -31,18 +32,9 @@
   },
 
   "background": {
+    "type": "module",
     "scripts": [
-      "common/browser/background/base-options.js",
-
-      "src/options/opts.js",
-      "src/communication.js",
-      "src/bookmarks.js",
-      "src/tabs.js",
-      "src/icon.js",
-      "src/andthen.js",
-      "src/popups.js",
-
-      "src/background.js"
+      "src/background.mjs"
     ]
   },
 
@@ -54,6 +46,15 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "bookmarker@TheNamlessGuy.github.io"
+    },
+
+    "namless": {
+      "common_includes": [
+        "browser/plugins/background/base-options.mjs",
+        "browser/plugins/background/base-communication.mjs",
+        "browser/plugins/foreground/base-communication.mjs",
+        "browser/general/onDOMContentLoaded.mjs"
+      ]
     }
   }
 }

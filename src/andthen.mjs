@@ -1,51 +1,65 @@
-/** AndThenData
- * @typedef {object} AndThenData
- * @property {BrowserURL} url
+/** @import {ProcessedEntry} from './bookmarks.mjs' */
+/** @import {OptionType_Area_Entry_AndThen} from './options/opts.mjs' */
+
+/** AndThen_DoData
+ * @typedef {object} AndThen_DoData
+ * @property {URL} url
  * @property {string} title
- * @property {Entry} entry
+ * @property {ProcessedEntry} entry
  * @property {number} tabID
  */
 
-/** AndThenType
- * @typedef {object} AndThenType
- * @property {boolean} automatic
- * @property {(andThen: EntryAndThen, data: AndThenData) => Promise<AndThenReturnType>} callback
+/** AndThen_DoExtras
+ * @typedef {object} AndThen_DoExtras
+ * @property {boolean} [onlyAutomatic]
  */
 
-/** AndThenReturnType
- * @typedef {object} AndThenReturnType
- * @property {string} [url]
+/** AndThen_Type
+ * @typedef {(typeof AndThen._types)[keyof typeof AndThen._types]} AndThen_Type
+ */
+
+/** AndThen_TypeImpl
+ * @typedef {object} AndThen_TypeImpl
+ * @property {boolean} automatic
+ * @property {(andThen: OptionType_Area_Entry_AndThen, data: AndThen_DoData) => Promise<AndThen_Type_ReturnType>} callback
+ */
+
+/** AndThen_Type_ReturnType
+ * @typedef {object} AndThen_Type_ReturnType
+ * @property {URL} [url]
  * @property {string} [title]
  */
 
-const AndThen = {
+export class AndThen {
   /**
-   * @param {AndThenData} data
-   * @param {boolean} onlyAutomatic
-   * @returns {{url: BrowserURL, title: string}}
+   * @param {AndThen_DoData} data
+   * @param {AndThen_DoExtras|null} [extras={}]
+   * @returns {Promise<{url: URL, title: string}>}
    */
-  do: async function(data, onlyAutomatic = false) {
+  static async do(data, extras = {}) {
+    const onlyAutomatic = extras?.onlyAutomatic ?? false;
+
     const retval = {
       url: data.url,
       title: data.title,
     };
 
     for (const andThen of data.entry.andThen) {
-      if (onlyAutomatic && !AndThen._types[andThen.type].automatic) { continue; }
+      const type = AndThen._types[andThen.type];
 
-      const response = await AndThen._types[andThen.type].callback(andThen, data);
+      if (onlyAutomatic && !type.automatic) { continue; }
+
+      const response = await type.callback(andThen, {...data, url: retval.url, title: retval.title});
 
       if ('url' in response) { retval.url = response.url; }
       if ('title' in response) { retval.title = response.title; }
     }
 
     return retval;
-  },
+  }
 
-  /**
-   * @type {Object.<string, AndThenType>}
-   */
-  _types: {
+  /** @type {{[name: string]: AndThen_TypeImpl}} */
+  static _types = /** @type {const} */ ({
     'set-url': {
       automatic: true,
       callback: async function(andThen, data) {
@@ -68,6 +82,7 @@ const AndThen = {
 
         const regex = new RegExp(andThen.values[0].value);
         const matches = data.title.match(regex);
+        if (matches == null) { return {}; }
 
         let retval = `${andThen.values[1].value}`;
         for (let i = 1; i < matches.length; ++i) {
@@ -77,5 +92,5 @@ const AndThen = {
         return {title: retval};
       },
     },
-  },
+  })
 }

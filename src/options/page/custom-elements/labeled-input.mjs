@@ -1,5 +1,9 @@
-class LabeledInputElement extends HTMLElement {
+import { onDOMContentLoaded } from "../../../../common/browser/general/onDOMContentLoaded.mjs";
+
+export class LabeledInputElement extends HTMLElement {
+  /** @type {HTMLSpanElement} */
   _label = null;
+  /** @type {HTMLInputElement} */
   _input = null;
 
   constructor() {
@@ -17,6 +21,7 @@ class LabeledInputElement extends HTMLElement {
     this.attachShadow({mode: 'closed'}).append(container);
   }
 
+  /** @param {string} value */
   set label(value) {
     this._label.innerText = `${value}: `;
   }
@@ -30,4 +35,4 @@ class LabeledInputElement extends HTMLElement {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => customElements.define('c-labeled-input', LabeledInputElement));
+onDOMContentLoaded(() => customElements.define('c-labeled-input', LabeledInputElement));

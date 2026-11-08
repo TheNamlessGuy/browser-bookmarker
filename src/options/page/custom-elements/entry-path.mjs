@@ -1,13 +1,27 @@
-class EntryPathElement extends HTMLElement {
+/** @import {OptionType_Area_Entry_Path} from '../../opts.mjs' */
+
+import { onDOMContentLoaded } from "../../../../common/browser/general/onDOMContentLoaded.mjs";
+import { EntryElement } from "./entry.mjs";
+import { ErrorElement } from "./error.mjs";
+import { PathElement } from "./path.mjs";
+
+export class EntryPathElement extends HTMLElement {
+  /** @type {EntryElement} */
   _entry = null;
 
+  /** @type {HTMLDivElement} */
   _errorContainer = null;
 
+  /** @type {HTMLInputElement} */
   _title = null;
+  /** @type {HTMLInputElement} */
   _default = null;
+  /** @type {PathElement} */
   _prefix = null;
 
+  /** @type {HTMLButtonElement} */
   _upBtn = null;
+  /** @type {HTMLButtonElement} */
   _downBtn = null;
 
   constructor() {
@@ -54,9 +68,9 @@ input, button {
     this._default.addEventListener('change', () => this.dispatchEvent(new Event('default-changed')));
     container.appendChild(this._default);
 
-    this._prefix = document.createElement('c-path');
+    this._prefix = new PathElement();
     this._prefix.options([
-      {value: 'prefix',       display: 'Use area prefix', editable: () => this._entry && this._entry._area.prefix.isEditable()},
+      {value: 'prefix',       display: 'Use area prefix', editable: () => this._entry && this._entry._area.path.isEditable()},
       {value: 'toolbar_____', display: 'Toolbar',         editable: true},
       {value: 'menu________', display: 'Menu',            editable: true},
     ]);
@@ -80,7 +94,7 @@ input, button {
 
   /**
    * @param {EntryElement} entry
-   * @param {{default: boolean, path: string[], root: string, title: string}} data
+   * @param {OptionType_Area_Entry_Path|null} data
    */
   init(entry, data) {
     this._entry = entry;
@@ -98,8 +112,9 @@ input, button {
     Array.from(this._errorContainer.children).forEach(x => x.remove());
   }
 
+  /** @param {string} msg */
   addError(msg) {
-    const error = document.createElement('c-error');
+    const error = new ErrorElement();
     error.message = msg;
     this._errorContainer.appendChild(error);
   }
@@ -133,6 +148,7 @@ input, button {
     this._downBtn.disabled = (idx === total - 1);
   }
 
+  /** @returns {OptionType_Area_Entry_Path} */
   toJSON() {
     const prefix = this._prefix.toJSON();
 
@@ -145,4 +161,4 @@ input, button {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => customElements.define('c-entry-path', EntryPathElement));
+onDOMContentLoaded(() => customElements.define('c-entry-path', EntryPathElement));

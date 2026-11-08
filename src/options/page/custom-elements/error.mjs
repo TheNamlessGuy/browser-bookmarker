@@ -1,4 +1,7 @@
-class ErrorElement extends HTMLElement {
+import { onDOMContentLoaded } from "../../../../common/browser/general/onDOMContentLoaded.mjs";
+
+export class ErrorElement extends HTMLElement {
+  /** @type {HTMLDivElement} */
   _container = null;
 
   constructor() {
@@ -20,9 +23,10 @@ div {
     this.attachShadow({mode: 'closed'}).append(style, this._container);
   }
 
+  /** @param {string} value */
   set message(value) {
     this._container.innerText = value;
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => customElements.define('c-error', ErrorElement));
+onDOMContentLoaded(() => customElements.define('c-error', ErrorElement));

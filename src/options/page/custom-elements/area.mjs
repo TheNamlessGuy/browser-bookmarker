@@ -1,30 +1,51 @@
-class AreaElement extends HTMLElement {
+/** @import {OptionType_Area, OptionType_Area_Entry} from '../../opts.mjs' */
+
+import { onDOMContentLoaded } from "../../../../common/browser/general/onDOMContentLoaded.mjs";
+import { EntryElement } from "./entry.mjs";
+import { ErrorElement } from "./error.mjs";
+import { GeneralElement } from "./general.mjs";
+import { PathElement } from "./path.mjs";
+
+export class AreaElement extends HTMLElement {
+  /** @type {GeneralElement} */
   _general = null;
 
+  /** @type {HTMLDivElement} */
   _errorContainer = null;
 
   _title = {
+    /** @type {string} */
     value: null,
+    /** @type {HTMLInputElement} */
     input: null,
+    /** @type {HTMLSpanElement} */
     display: null,
 
     buttons: {
+      /** @type {HTMLButtonElement} */
       up: null,
+      /** @type {HTMLButtonElement} */
       down: null,
     },
   };
 
   _content = {
+    /** @type {HTMLDivElement} */
     show: null,
+    /** @type {HTMLDivElement} */
     hide: null,
   };
 
   _entries = {
+    /** @type {HTMLButtonElement} */
     add: null,
+    /** @type {HTMLDivElement} */
     container: null,
   };
 
+  /** @type {PathElement} */
   _prefix = null;
+  /** @type {HTMLInputElement} */
   _followRedirects = null;
 
   constructor() {
@@ -108,10 +129,10 @@ legend > span {
     removeBtn.addEventListener('click', () => this.remove());
     areaNameContainer.appendChild(removeBtn);
 
-    this._prefix = document.createElement('c-path');
+    this._prefix = new PathElement();
     this._prefix.options([
       {value: '',             display: 'No prefix',          editable: false},
-      {value: 'prefix',       display: 'Use general prefix', editable: () => this._general.prefix.isEditable()},
+      {value: 'prefix',       display: 'Use general prefix', editable: () => this._general.path.isEditable()},
       {value: 'toolbar_____', display: 'Toolbar',            editable: true},
       {value: 'menu________', display: 'Menu',               editable: true},
     ]);
@@ -162,16 +183,17 @@ legend > span {
     }
   }
 
-  get prefix() {
+  get path() {
     return this._prefix;
   }
 
   get entries() {
-    return Array.from(this._entries.container.getElementsByTagName('c-entry'));
+    return /** @type {EntryElement[]} */ (Array.from(this._entries.container.getElementsByTagName('c-entry')));
   }
 
   /**
-   * @param {{entries: EntryElement[], name: string, opts: {followRedirects: boolean}, prefix: Path}} data
+   * @param {GeneralElement} general
+   * @param {OptionType_Area|null} data
    */
   init(general, data = null) {
     this._general = general;
@@ -186,7 +208,7 @@ legend > span {
     this._prefix.init(data?.prefix ?? null);
 
     if (data == null) {
-      this._prefix.selectValue = this._general.prefix.selectValue === '' ? '' : 'prefix';
+      this._prefix.selectValue = this._general.path.selectValue === '' ? '' : 'prefix';
     }
 
     const entries = data?.entries ?? [];
@@ -199,8 +221,9 @@ legend > span {
     }
   }
 
+  /** @param {OptionType_Area_Entry|null} data */
   addEntry(data = null) {
-    const entry = document.createElement('c-entry');
+    const entry = new EntryElement();
     entry.init(this, data);
 
     entry.addEventListener('move-up', () => {
@@ -217,6 +240,10 @@ legend > span {
     this.entries.forEach(x => x.toggleButtonDisabledState());
   }
 
+  /**
+   * @param {EntryElement} entry
+   * @returns {number}
+   */
   getEntryIndex(entry) {
     return this.entries.findIndex(x => x === entry);
   }
@@ -225,6 +252,7 @@ legend > span {
     return !this._content.hide.classList.contains('hidden');
   }
 
+  /** @param {boolean} collapse */
   toggleCollapsed(collapse = null) {
     collapse = collapse ?? !this.isCollapsed();
 
@@ -232,6 +260,10 @@ legend > span {
     this._content.hide.classList.toggle('hidden', !collapse);
   }
 
+  /**
+   * @param {number} idx
+   * @param {number} total
+   */
   toggleButtonDisabledState(idx, total) {
     this._title.buttons.up.disabled = (idx === 0);
     this._title.buttons.down.disabled = (idx === total - 1);
@@ -241,8 +273,9 @@ legend > span {
     Array.from(this._errorContainer.children).forEach(x => x.remove());
   }
 
+  /** @param {string} msg */
   addError(msg) {
-    const error = document.createElement('c-error');
+    const error = new ErrorElement();
     error.message = msg;
     this._errorContainer.appendChild(error);
   }
@@ -275,6 +308,7 @@ legend > span {
     return isValid;
   }
 
+  /** @returns {OptionType_Area} */
   toJSON() {
     return {
       name: this.title,
@@ -287,4 +321,4 @@ legend > span {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => customElements.define('c-area', AreaElement));
+onDOMContentLoaded(() => customElements.define('c-area', AreaElement));

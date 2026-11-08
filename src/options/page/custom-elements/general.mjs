@@ -1,5 +1,12 @@
-class GeneralElement extends HTMLElement {
+/** @import {OptionType_General} from '../../opts.mjs' */
+
+import { onDOMContentLoaded } from "../../../../common/browser/general/onDOMContentLoaded.mjs";
+import { PathElement } from "./path.mjs";
+
+export class GeneralElement extends HTMLElement {
+  /** @type {HTMLInputElement} */
   _saveUsingBookmark = null;
+  /** @type {PathElement} */
   _prefix = null;
 
   constructor() {
@@ -22,7 +29,7 @@ class GeneralElement extends HTMLElement {
     this._saveUsingBookmark.type = 'checkbox';
     container.appendChild(this._saveUsingBookmark);
 
-    this._prefix = document.createElement('c-path');
+    this._prefix = new PathElement();
     this._prefix.options([
       {value: '',             display: 'No prefix', editable: false},
       {value: 'toolbar_____', display: 'Toolbar',   editable: true},
@@ -34,12 +41,16 @@ class GeneralElement extends HTMLElement {
     this.attachShadow({mode: 'closed'}).append(style, container);
   }
 
+  /**
+   * @param {OptionType_General} data
+   * @param {boolean} saveUsingBookmark
+   */
   init(data, saveUsingBookmark) {
     this._saveUsingBookmark.checked = saveUsingBookmark;
     this._prefix.init(data?.prefix ?? null);
   }
 
-  get prefix() {
+  get path() {
     return this._prefix;
   }
 
@@ -51,6 +62,7 @@ class GeneralElement extends HTMLElement {
     return this._prefix.isValid();
   }
 
+  /** @returns {OptionType_General} */
   toJSON() {
     return {
       prefix: this._prefix.toJSON(),
@@ -58,4 +70,4 @@ class GeneralElement extends HTMLElement {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => customElements.define('c-general', GeneralElement));
+onDOMContentLoaded(() => customElements.define('c-general', GeneralElement));
