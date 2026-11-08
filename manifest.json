@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Bookmarker",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Bookmark tabs easier",
   "author": "TheNamlessGuy",
   "homepage_url": "https://github.com/TheNamlessGuy/bookmarker",
@@ -53,6 +53,7 @@
         "browser/plugins/background/base-options.mjs",
         "browser/plugins/background/base-communication.mjs",
         "browser/plugins/foreground/base-communication.mjs",
+        "browser/plugins/constants.mjs",
         "browser/general/onDOMContentLoaded.mjs"
       ]
     }
